@@ -17,6 +17,7 @@
 
 use strict;
 use warnings;
+use Sys::Syslog;
 
 use Test::More tests => 5;    # last test to print
 
