@@ -18,12 +18,13 @@
 use strict;
 use warnings;
 use Sys::Syslog;
+use lib 'lib';
 
 use Test::More tests => 5;    # last test to print
 
 use_ok('NCIP::Configuration');
 
-ok( my $config = NCIP::Configuration->new('../t/config_sample'),
+ok( my $config = NCIP::Configuration->new('t/config_sample'),
     'Creating a config object' );
 
 # because the file is called NCIP.xml we now have that namespace
