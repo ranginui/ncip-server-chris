@@ -3,13 +3,18 @@
 
   <server-params
     min_servers='1'
-    min_spare_servers='0' 
+    min_spare_servers='0'
     log_file='Sys::Syslog'
     syslog_ident='ncip_server'
     syslog_facility='local6'
   />
   
   <listeners>
+    <service
+      port="127.0.0.1:6001/tcp"
+      transport="RAW"
+      protocol="NCIP/2.00"
+      timeout="60" />
   </listeners>
 
   <agencies>
