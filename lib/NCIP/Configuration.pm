@@ -1,20 +1,22 @@
 package NCIP::Configuration;
+
+# Copyright 2013 Catalyst IT <chrisc@catalyst.net.nz>
+
+# This file is part of NCIPServer
 #
-#===============================================================================
+# NCIPServer is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
 #
-#         FILE: Configuration.pm
+# NCIPServer is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 #
-#  DESCRIPTION:
-#
-#        FILES: ---
-#         BUGS: ---
-#        NOTES: ---
-#       AUTHOR: Chris Cormack (rangi), chrisc@catalyst.net.nz
-# ORGANIZATION: Koha Development Team
-#      VERSION: 1.0
-#      CREATED: 28/08/13 10:16:55
-#     REVISION: ---
-#===============================================================================
+# You should have received a copy of the GNU General Public License along
+# with NCIPServer; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 
 =head1 NAME
   
@@ -52,6 +54,16 @@ sub new {
     $self->{'listeners'} = \%listeners;
     return $self;
 }
+
+=head1 FUNCTIONS
+
+=head2 find_service
+
+  my $service = $config->($sockaddr, $port, $proto);
+
+  Used to find which service you should be using to answer an incoming request
+
+=cut
 
 sub find_service {
     my ( $self, $sockaddr, $port, $proto ) = @_;
