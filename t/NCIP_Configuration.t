@@ -18,7 +18,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;    # last test to print
+use Test::More tests => 5;    # last test to print
 
 use_ok('NCIP::Configuration');
 
@@ -29,4 +29,6 @@ ok( my $config = NCIP::Configuration->new('../t/config_sample'),
 ok( my $server_params = $config->('NCIP.server-params'), 'Get server-params' );
 
 is( $server_params->{'min_servers'}, 1, 'Do we have a minimum of one server' );
+
+ok ($config->find_service('127.0.0.1','6001','tcp'),'Testing find_service');
 
