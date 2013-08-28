@@ -1,11 +1,44 @@
 package NCIPServer;
 
+# Copyright 2013 Catalyst IT <chrisc@catalyst.net.nz>
+
+# This file is part of NCIPServer
+#
+# NCIPServer is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# NCIPServer is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with NCIPServer; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 use Sys::Syslog qw(syslog);
 use Modern::Perl;
 use NCIP::Configuration;
 use IO::Socket::INET;
 use Socket qw(:DEFAULT :crlf);
 use base qw(Net::Server::PreFork);
+
+=head1 NAME
+  
+    NCIP::Configuration
+
+=head1 SYNOPSIS
+
+    use NCIPServer;
+    my $server = NCIPServer->new({config_dir => $config_dir});
+
+=head1 FUNCTIONS
+
+=head2 run()
+
+  Apart from new, this is the only method you should ever call from outside this module
+=cut
 
 our $VERSION = '0.01';
 
