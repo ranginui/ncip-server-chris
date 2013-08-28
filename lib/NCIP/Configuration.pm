@@ -29,7 +29,42 @@ package NCIP::Configuration;
 
 use Modern::Perl;
 
+use NCIP::Configuration::Service;
 use base qw(Config::Merge);
 
+sub new {
+    my $class = shift;
+    my $self  = $class->SUPER::new(@_);
+    my @services;
+
+    # we might have a few services set them up safely
+    if ( ref( $self->('NCIP.listeners.service') ) eq 'ARRAY' ) {
+        @services = $self->('NCIP.listeners.service');
+    }
+    else {
+        @services = ( $self->('NCIP.listeners')->{'service'} );
+    }
+    my %listeners;
+    foreach my $service (@services) {
+        my $serv_object = NCIP::Configuration::Service->new($service);
+        $listeners{ lc $service->{'port'} } = $serv_object;
+    }
+    $self->{'listeners'} = \%listeners;
+    return $self;
+}
+
+sub find_service {
+    my ( $self, $sockaddr, $port, $proto ) = @_;
+    my $portstr;
+    foreach my $addr ( '', '*:', "$sockaddr:" ) {
+        $portstr = sprintf( "%s%s/%s", $addr, $port, lc $proto );
+
+        #        Sys::Syslog::syslog( "LOG_DEBUG",
+        #            "Configuration::find_service: Trying $portstr" );
+        #        print "Configuration::find_service: Trying $portstr";
+        last if ( exists( ( $self->{listeners} )->{$portstr} ) );
+    }
+    return $self->{listeners}->{$portstr};
+}
 1;
 
