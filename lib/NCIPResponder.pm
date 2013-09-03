@@ -7,7 +7,6 @@ use FileHandle;
 use Apache2::Const -compile => qw(OK :log :http :methods :cmd_how :override);
 use Apache2::RequestRec ();
 use Apache2::RequestIO ();
-use NCIPServer::NCIP;
 
 sub handler {
     my $r = shift;
