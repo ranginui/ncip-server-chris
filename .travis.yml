@@ -9,6 +9,8 @@ before_install:
   - cpanm --notest Devel::Cover
   - cpanm --notest Modern::Perl
   - cpanm --notest Config::Merge
+  - cpanm --notest XML::Simple
+  - cpanm --notest Net::Server::PreFork
 install:
   - prove -v --timer
   - cover
