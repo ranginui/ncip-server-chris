@@ -1,0 +1,16 @@
+language: perl
+perl:
+  - "5.16"
+  - "5.14"
+  - "5.12"
+  - "5.10"
+before_install:
+  - cpanm --notest Class::Accessor
+install:
+  - prove -v --timer
+notifications:
+  recipients:
+    - chris@bigballofwax.co.nz
+  email:
+    on_success: change
+    on_failure: always
