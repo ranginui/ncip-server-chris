@@ -12,7 +12,7 @@ before_install:
   - cpanm --notest XML::Simple
   - cpanm --notest Net::Server::PreFork
 install:
-  - prove -v --timer
+  - PERL5OPT=-MDevel::Cover prove -v --timer
   - cover
 notifications:
   recipients:
