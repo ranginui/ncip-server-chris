@@ -6,8 +6,10 @@ perl:
   - "5.10"
 before_install:
   - cpanm --notest Class::Accessor
+  - cnanm --notest Devel::Cover
 install:
   - prove -v --timer
+  - cover
 notifications:
   recipients:
     - chris@bigballofwax.co.nz
