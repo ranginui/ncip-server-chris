@@ -3,6 +3,8 @@ use NCIP::Configuration;
 use Modern::Perl;
 use base qw(Class::Accessor);
 
+our $VERSION='0.01';
+
 sub new {
     my $proto = shift;
     my $class = ref $proto || $proto;
