@@ -8,6 +8,7 @@ before_install:
   - cpanm --notest Class::Accessor
   - cpanm --notest Devel::Cover
   - cpanm --notest Modern::Perl
+  - cpanm --notest Config::Merge
 install:
   - prove -v --timer
   - cover
