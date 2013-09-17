@@ -11,9 +11,8 @@ before_install:
   - cpanm --notest Config::Merge
   - cpanm --notest XML::Simple
   - cpanm --notest Net::Server::PreFork
-install:
-  - PERL5OPT=-MDevel::Cover prove -v --timer
-  - cover
+after_install:
+  - cover -test
 notifications:
   recipients:
     - chris@bigballofwax.co.nz
