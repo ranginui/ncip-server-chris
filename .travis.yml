@@ -12,8 +12,8 @@ before_install:
   - cpanm --notest Config::Merge
   - cpanm --notest XML::Simple
   - cpanm --notest Net::Server::PreFork
-install:
-  -  perl Build.PL && ./Build build && cover -test -report coveralls
+install: perl Build.PL && ./Build test
+script: perl Build.PL && ./Build build && cover -test -report coveralls
 notifications:
   recipients:
     - chris@bigballofwax.co.nz
