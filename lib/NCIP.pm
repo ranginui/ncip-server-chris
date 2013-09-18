@@ -1,13 +1,14 @@
 package NCIP;
 use NCIP::Configuration;
+use NCIP::Handler;
 use Modern::Perl;
 use XML::LibXML;
 use Try::Tiny;
 
-use base qw(Class::Accessor);
+use Object::Tiny;
 
 our $VERSION = '0.01';
-our $nsURI = 'http://www.niso.org/2008/ncip';
+our $nsURI   = 'http://www.niso.org/2008/ncip';
 
 =head1 NAME
   
@@ -48,12 +49,17 @@ sub process_request {
 
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
+        return;
+
+        #bail out for now
     }
 
 #my $response = "<HTML> <HEAD> <TITLE>Hello There</TITLE> </HEAD> <BODY> <H1>Hello You Big JERK!</H1> Who would take this book seriously if the first eaxample didn't say \"hello world\"?  </BODY> </HTML>";
 
     #return $response;
-    return $request_type;
+    warn $request_type;
+    my $handler = NCIP::Handler->new($request_type);
+    return $handler->handle($xml);
 }
 
 =head2 handle_initiation
@@ -73,8 +79,21 @@ sub handle_initiation {
     if ($dom) {
 
         # should check validity with validate at this point
+        #        if ( $self->validate($dom) ) {
         my $request_type = $self->parse_request($dom);
-        return $request_type;
+
+        # do whatever we should do to initiate, then hand back request_type
+        if ($request_type) {
+            return $request_type;
+        }
+
+        #       }
+        #       else {
+        #            warn "Not valid xml";
+        # not valid throw error
+        #           return;
+        #       }
+
     }
     else {
         return;
@@ -98,14 +117,14 @@ sub validate {
 sub parse_request {
     my $self  = shift;
     my $dom   = shift;
-    my $nodes = $dom->getElementsByTagNameNS($nsURI,'NCIPMessage');
-    if ($nodes){
+    my $nodes = $dom->getElementsByTagNameNS( $nsURI, 'NCIPMessage' );
+    if ($nodes) {
         my @childnodes = $nodes->[0]->childNodes();
-        if ($childnodes[1]){
+        if ( $childnodes[1] ) {
             return $childnodes[1]->localname();
         }
         else {
-            return "unknown";
+            return;
         }
     }
     else {
