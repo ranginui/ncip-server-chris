@@ -17,8 +17,9 @@
 
 use strict;
 use warnings;
+use File::Slurp;
 
-use Test::More tests => 5;    # last test to print
+use Test::More tests => 7;    # last test to print
 
 use lib 'lib';
 
@@ -26,8 +27,10 @@ use_ok('NCIP');
 ok( my $ncip = NCIP->new('t/config_sample'), 'Create new object' );
 
 my $xml = <<'EOT';
-<xml>
-</xml>
+<?xml version="1.0" encoding="UTF-8"?>
+<ns1:NCIPMessage
+  ns1:version="http://www.niso.org/schemas/ncip/v2_0/imp1/xsd/ncip_v2_0.xsd" xmlns:ns1="http://www.niso.org/2008/ncip">
+</ns1:NCIPMessage>
 EOT
 
 ok( my $response = $ncip->process_request($xml), 'Process a request' );
@@ -43,3 +46,8 @@ EOT
 # anyway
 ok( !$ncip->handle_initiation($xmlbad), 'Bad xml' );
 ok( $ncip->handle_initiation($xml),     'Good XML' );
+
+my $lookupitem = read_file('t/sample_data/LookupItem.xml');
+
+ok( my $response = $ncip->process_request($lookupitem), 'Try looking up an item');
+is ($response, 'LookupItem', 'We got lookupitem');
