@@ -18,7 +18,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3;    # last test to print
+use Test::More tests => 5;    # last test to print
 
 use lib 'lib';
 
@@ -32,3 +32,14 @@ EOT
 
 ok( my $response = $ncip->process_request($xml), 'Process a request' );
 
+my $xmlbad = <<'EOT';
+<xml>
+this is bad
+<xml>
+</xml>
+EOT
+
+# handle_initiation is called as part of the process_request, but best to test
+# anyway
+ok( !$ncip->handle_initiation($xmlbad), 'Bad xml' );
+ok( $ncip->handle_initiation($xml),     'Good XML' );
