@@ -1,5 +1,6 @@
 use Module::Build;
 Module::Build->new(
-    module_name => 'NCIP',
-    license     => 'GPL2+',
+    dist_abstract => 'Main module for NCIP support',
+    module_name   => 'NCIP',
+    license       => 'gpl',
 )->create_build_script;
