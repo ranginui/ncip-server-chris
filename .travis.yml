@@ -12,6 +12,8 @@ before_install:
   - cpanm --notest Config::Merge
   - cpanm --notest XML::Simple
   - cpanm --notest Net::Server::PreFork
+  - cpanm --notest Try::Tiny
+  - cpanm --notest XML::LibXML
 install: perl Build.PL && ./Build test
 script: perl Build.PL && ./Build build && cover -test -report coveralls
 notifications:
