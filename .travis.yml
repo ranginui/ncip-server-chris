@@ -14,6 +14,7 @@ before_install:
   - cpanm --notest Net::Server::PreFork
   - cpanm --notest Try::Tiny
   - cpanm --notest XML::LibXML
+  - cpanm --notest File::Slurp
 install: perl Build.PL && ./Build test
 script: perl Build.PL && ./Build build && cover -test -report coveralls
 notifications:
