@@ -7,6 +7,7 @@ use Try::Tiny;
 use base qw(Class::Accessor);
 
 our $VERSION = '0.01';
+our $nsURI = 'http://www.niso.org/2008/ncip';
 
 =head1 NAME
   
@@ -97,26 +98,20 @@ sub validate {
 sub parse_request {
     my $self  = shift;
     my $dom   = shift;
-    my $nodes = $dom->findnodes('/*');
-    if ( $nodes->[0]->nodeName() ne 'ns1:NCIPMessage' ) {
-
-        # we don't have a valid ncip message
-        # bail out
-        warn "bad xml";
-    }
-    else {
+    my $nodes = $dom->getElementsByTagNameNS($nsURI,'NCIPMessage');
+    if ($nodes){
         my @childnodes = $nodes->[0]->childNodes();
-
-        # the second child should be the type of request
-        if ( $childnodes[1] && $childnodes[1]->nodeName =~ /ns1\:(.*)/ ) {
-            return $1;
+        if ($childnodes[1]){
+            return $childnodes[1]->localname();
         }
         else {
-            # just while developing return not found
-            return ('Not_found');
+            return "unknown";
         }
     }
-
+    else {
+        warn "Invalid XML";
+        return 0;
+    }
     return 0;
 }
 
