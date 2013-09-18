@@ -48,10 +48,11 @@ sub process_request {
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
     }
-    my $response =
-"<HTML> <HEAD> <TITLE>Hello There</TITLE> </HEAD> <BODY> <H1>Hello You Big JERK!</H1> Who would take this book seriously if the first eaxample didn't say \"hello world\"?  </BODY> </HTML>";
 
-    return $response;
+#my $response = "<HTML> <HEAD> <TITLE>Hello There</TITLE> </HEAD> <BODY> <H1>Hello You Big JERK!</H1> Who would take this book seriously if the first eaxample didn't say \"hello world\"?  </BODY> </HTML>";
+
+    #return $response;
+    return $request_type;
 }
 
 =head2 handle_initiation
@@ -69,11 +70,54 @@ sub handle_initiation {
         warn "Invalid xml, caught error: $_";
     };
     if ($dom) {
-        return ('lookup_item');
+
+        # should check validity with validate at this point
+        my $request_type = $self->parse_request($dom);
+        return $request_type;
     }
     else {
         return;
     }
+}
+
+sub validate {
+
+    # this should perhaps be in it's own module
+    my $self     = shift;
+    my $dom      = shift;
+    my $validity = $dom->is_valid();
+
+    # we could validate against the dtd here, might be good?
+    # my $dtd = XML::LibXML::Dtd->parse_string($dtd_str);
+    # my $validity = $dom->is_valid($dtd);
+    # perhaps we could check the ncip version and validate that too
+    return $validity;
+}
+
+sub parse_request {
+    my $self  = shift;
+    my $dom   = shift;
+    my $nodes = $dom->findnodes('/*');
+    if ( $nodes->[0]->nodeName() ne 'ns1:NCIPMessage' ) {
+
+        # we don't have a valid ncip message
+        # bail out
+        warn "bad xml";
+    }
+    else {
+        my @childnodes = $nodes->[0]->childNodes();
+
+        # the second child should be the type of request
+        if ( $childnodes[1] && $childnodes[1]->nodeName =~ /ns1\:(.*)/ ) {
+            return $1;
+        }
+        else {
+            # just while developing return not found
+            return ('Not_found');
+        }
+    }
+
+    return 0;
 }
 
 1;
