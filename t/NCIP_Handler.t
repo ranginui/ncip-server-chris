@@ -3,7 +3,7 @@
 #
 #         FILE: NCIP_Handler.t
 #
-#  DESCRIPTION: 
+#  DESCRIPTION:
 #
 #        FILES: ---
 #         BUGS: ---
@@ -18,12 +18,12 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;                      # last test to print
+use Test::More tests => 3;    # last test to print
 use lib 'lib';
 
 use_ok('NCIP::Handler');
 
-my $type='LookupItem';
+my $type = 'LookupItem';
 
-ok (my $handler = NCIP::Handler->new($type), 'Create new handler');
-ok (my $response = $handler->handle());
+ok( my $handler = NCIP::Handler->new($type), 'Create new handler' );
+ok( my $response = $handler->handle() );
