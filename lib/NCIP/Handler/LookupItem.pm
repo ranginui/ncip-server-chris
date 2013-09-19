@@ -28,7 +28,6 @@ sub handle {
     if ($xmldoc) {
         # my ($item_id) = $dom->getElementsByTagNameNS( $nsURI, 'ItemId' );
     }
-    des = $dom->getElementsByTagNameNS( $nsURI, 'NCIPMessage' );
     return $self->type;
 }
 

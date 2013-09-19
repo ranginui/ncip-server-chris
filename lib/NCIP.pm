@@ -106,7 +106,7 @@ sub validate {
     catch {
         warn "Bad xml, caught error: $_";
         return;
-    }
+    };
 
     # we could validate against the dtd here, might be good?
     # my $dtd = XML::LibXML::Dtd->parse_string($dtd_str);
