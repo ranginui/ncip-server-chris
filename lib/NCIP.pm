@@ -53,11 +53,6 @@ sub process_request {
 
         #bail out for now
     }
-
-#my $response = "<HTML> <HEAD> <TITLE>Hello There</TITLE> </HEAD> <BODY> <H1>Hello You Big JERK!</H1> Who would take this book seriously if the first eaxample didn't say \"hello world\"?  </BODY> </HTML>";
-
-    #return $response;
-    warn $request_type;
     my $handler = NCIP::Handler->new($request_type);
     return $handler->handle($xml);
 }
@@ -79,21 +74,18 @@ sub handle_initiation {
     if ($dom) {
 
         # should check validity with validate at this point
-        #        if ( $self->validate($dom) ) {
-        my $request_type = $self->parse_request($dom);
-
-        # do whatever we should do to initiate, then hand back request_type
-        if ($request_type) {
-            return $request_type;
+        if ( $self->validate($dom) ) {
+            my $request_type = $self->parse_request($dom);
+            # do whatever we should do to initiate, then hand back request_type
+            if ($request_type) {
+                return $request_type;
+            }
         }
-
-        #       }
-        #       else {
-        #            warn "Not valid xml";
-        # not valid throw error
-        #           return;
-        #       }
-
+        else {
+            warn "Not valid xml";
+            # not valid throw error
+            return;
+        }
     }
     else {
         return;
@@ -103,15 +95,21 @@ sub handle_initiation {
 sub validate {
 
     # this should perhaps be in it's own module
-    my $self     = shift;
-    my $dom      = shift;
-    my $validity = $dom->is_valid();
+    my $self = shift;
+    my $dom  = shift;
+    try {
+        $dom->validate();
+    }
+    catch {
+        warn "Bad xml, caught error: $_";
+        return;
+    }
 
     # we could validate against the dtd here, might be good?
     # my $dtd = XML::LibXML::Dtd->parse_string($dtd_str);
-    # my $validity = $dom->is_valid($dtd);
+    # $dom->validate($dtd);
     # perhaps we could check the ncip version and validate that too
-    return $validity;
+    return 1;
 }
 
 sub parse_request {
@@ -129,9 +127,9 @@ sub parse_request {
     }
     else {
         warn "Invalid XML";
-        return 0;
+        return;
     }
-    return 0;
+    return;
 }
 
 1;
