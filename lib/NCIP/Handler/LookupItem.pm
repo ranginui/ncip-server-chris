@@ -5,7 +5,7 @@ package NCIP::Handler::LookupItem;
 #
 #         FILE: LookupItem.pm
 #
-#  DESCRIPTION: 
+#  DESCRIPTION:
 #
 #        FILES: ---
 #         BUGS: ---
@@ -23,7 +23,12 @@ use NCIP::Handler;
 our @ISA = qw(NCIP::Handler);
 
 sub handle {
-    my $self = shift;
+    my $self   = shift;
+    my $xmldoc = shift;
+    if ($xmldoc) {
+        # my ($item_id) = $dom->getElementsByTagNameNS( $nsURI, 'ItemId' );
+    }
+    des = $dom->getElementsByTagNameNS( $nsURI, 'NCIPMessage' );
     return $self->type;
 }
 
