@@ -4,7 +4,7 @@ package NCIP::Handler;
 #
 #         FILE: Hander.pm
 #
-#  DESCRIPTION: 
+#  DESCRIPTION:
 #
 #        FILES: ---
 #         BUGS: ---
@@ -19,14 +19,14 @@ package NCIP::Handler;
 use Modern::Perl;
 use Object::Tiny qw{ type };
 
-
 use NCIP::Handler::LookupItem;
 
 sub new {
-    my $class = shift;
-    my $type = shift;
-    my $subclass = __PACKAGE__."::".$type;
-    my $self = bless { type => $type }, $subclass;
+    my $class    = shift;
+    my $type     = shift;
+    my $xmldoc   = shift;
+    my $subclass = __PACKAGE__ . "::" . $type;
+    my $self     = bless { type => $type }, $subclass;
     return $self;
 }
 
