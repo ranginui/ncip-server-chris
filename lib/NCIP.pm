@@ -5,7 +5,7 @@ use Modern::Perl;
 use XML::LibXML;
 use Try::Tiny;
 
-use Object::Tiny;
+use Object::Tiny qw{xmldoc config};
 
 our $VERSION = '0.01';
 our $nsURI   = 'http://www.niso.org/2008/ncip';
@@ -44,7 +44,7 @@ sub process_request {
     my $self = shift;
     my $xml  = shift;
 
-    my $request_type = $self->handle_initiation($xml);
+    my ($request_type) = $self->handle_initiation($xml);
     unless ($request_type) {
 
       # We have invalid xml, or we can't figure out what kind of request this is
@@ -54,7 +54,7 @@ sub process_request {
         #bail out for now
     }
     my $handler = NCIP::Handler->new($request_type);
-    return $handler->handle($xml);
+    return $handler->handle( $self->xmldoc );
 }
 
 =head2 handle_initiation
@@ -76,13 +76,16 @@ sub handle_initiation {
         # should check validity with validate at this point
         if ( $self->validate($dom) ) {
             my $request_type = $self->parse_request($dom);
+
             # do whatever we should do to initiate, then hand back request_type
             if ($request_type) {
+                $self->{xmldoc} = $dom;
                 return $request_type;
             }
         }
         else {
             warn "Not valid xml";
+
             # not valid throw error
             return;
         }
@@ -103,7 +106,7 @@ sub validate {
     catch {
         warn "Bad xml, caught error: $_";
         return;
-    }
+    };
 
     # we could validate against the dtd here, might be good?
     # my $dtd = XML::LibXML::Dtd->parse_string($dtd_str);
