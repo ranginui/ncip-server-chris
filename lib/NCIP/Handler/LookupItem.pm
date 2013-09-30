@@ -20,13 +20,17 @@ package NCIP::Handler::LookupItem;
 use Modern::Perl;
 
 use NCIP::Handler;
+use NCIP::Item;
+
 our @ISA = qw(NCIP::Handler);
 
 sub handle {
     my $self   = shift;
     my $xmldoc = shift;
     if ($xmldoc) {
-        # my ($item_id) = $dom->getElementsByTagNameNS( $nsURI, 'ItemId' );
+        my ($item_id) =
+          $xmldoc->getElementsByTagNameNS( $self->namespace(), 'ItemId' );
+        my $item = NCIP::Item->new( { itemid => $item_id } );
     }
     return $self->type;
 }
