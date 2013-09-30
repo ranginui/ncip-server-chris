@@ -22,8 +22,9 @@ use Test::More tests => 3;    # last test to print
 use lib 'lib';
 
 use_ok('NCIP::Handler');
+my $namespace='http://test';
 
 my $type = 'LookupItem';
 
-ok( my $handler = NCIP::Handler->new($type), 'Create new handler' );
+ok( my $handler = NCIP::Handler->new($namespace, $type), 'Create new handler' );
 ok( my $response = $handler->handle() );
