@@ -5,7 +5,7 @@ use Modern::Perl;
 use XML::LibXML;
 use Try::Tiny;
 
-use Object::Tiny qw{xmldoc config};
+use Object::Tiny qw{xmldoc config namespace};
 
 our $VERSION = '0.01';
 our $nsURI   = 'http://www.niso.org/2008/ncip';
@@ -29,7 +29,8 @@ sub new {
     my $config_dir = shift;
     my $self       = {};
     my $config     = NCIP::Configuration->new($config_dir);
-    $self->{config} = $config;
+    $self->{config}    = $config;
+    $self->{namespace} = $nsURI;
     return bless $self, $class;
 
 }
@@ -53,7 +54,7 @@ sub process_request {
 
         #bail out for now
     }
-    my $handler = NCIP::Handler->new($request_type);
+    my $handler = NCIP::Handler->new( $self->namespace(), $request_type );
     return $handler->handle( $self->xmldoc );
 }
 
