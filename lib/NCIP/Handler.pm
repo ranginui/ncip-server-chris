@@ -26,7 +26,7 @@ sub new {
     my $namespace = shift;
     my $type      = shift;
     my $subclass  = __PACKAGE__ . "::" . $type;
-    my $self      = bless { type => $type, namspace => $namespace }, $subclass;
+    my $self      = bless { type => $type, namespace => $namespace }, $subclass;
     return $self;
 }
 

@@ -28,9 +28,12 @@ sub handle {
     my $self   = shift;
     my $xmldoc = shift;
     if ($xmldoc) {
+        # Given our xml document, lets find the itemid
         my ($item_id) =
-          $xmldoc->getElementsByTagNameNS( $self->namespace(), 'ItemId' );
-        my $item = NCIP::Item->new( { itemid => $item_id } );
+          $xmldoc->getElementsByTagNameNS( $self->namespace(),
+            'ItemIdentifierValue' );
+        my $item = NCIP::Item->new( { itemid => $item_id->textContent() } );
+        warn $item->itemid();
     }
     return $self->type;
 }
