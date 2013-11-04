@@ -30,7 +30,7 @@ package NCIP::Configuration;
 =cut
 
 use Modern::Perl;
-
+use Module::Load;
 use NCIP::Configuration::Service;
 use base qw(Config::Merge);
 
@@ -52,6 +52,10 @@ sub new {
         $listeners{ lc $service->{'port'} } = $serv_object;
     }
     $self->{'listeners'} = \%listeners;
+    my $module = 'NCIP::ILS::'.$self->('NCIP.ils.value');
+    load $module;
+    my $ils = $module->new();
+    $self->{'ils'}=$ils;
     return $self;
 }
 

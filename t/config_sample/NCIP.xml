@@ -33,4 +33,6 @@
   <version>
   </version>
 
+  <ils value='Koha' />
+
 </acsconfig>
