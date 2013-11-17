@@ -1,0 +1,7 @@
+[% INCLUDE 'includes/header.inc' %]
+
+<NCIPMessage>
+    <[% messagetype %]>
+
+    </[% messagetype %]>
+</NCIPMessage>
