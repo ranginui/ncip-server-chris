@@ -17,16 +17,19 @@ package NCIP::Handler;
 #===============================================================================
 
 use Modern::Perl;
-use Object::Tiny qw{ type namespace };
+use Object::Tiny qw{ type namespace ils };
 
 use NCIP::Handler::LookupItem;
 
 sub new {
-    my $class     = shift;
-    my $namespace = shift;
-    my $type      = shift;
-    my $subclass  = __PACKAGE__ . "::" . $type;
-    my $self      = bless { type => $type, namespace => $namespace }, $subclass;
+    my $class    = shift;
+    my $params   = shift;
+    my $subclass = __PACKAGE__ . "::" . $params->{type};
+    my $self     = bless {
+        type      => $params->{type},
+        namespace => $params->{namespace},
+        ils       => $params->{ils}
+    }, $subclass;
     return $self;
 }
 

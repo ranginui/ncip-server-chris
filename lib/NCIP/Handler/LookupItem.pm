@@ -32,7 +32,7 @@ sub handle {
         my ($item_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'ItemIdentifierValue' );
-        my $item = NCIP::Item->new( { itemid => $item_id->textContent() } );
+        my $item = NCIP::Item->new( { itemid => $item_id->textContent(), ils => $self->ils} );
         warn $item->itemid();
     }
     return $self->type;

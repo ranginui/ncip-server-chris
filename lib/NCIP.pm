@@ -36,7 +36,7 @@ sub new {
     # load the ILS dependent module
     my $module = 'NCIP::ILS::' . $config->('NCIP.ils.value');
     load $module || die "Can not load ILS module $module";
-    my $ils = $module->new(  name => $config->('NCIP.ils.value')  );
+    my $ils = $module->new( name => $config->('NCIP.ils.value') );
     $self->{'ils'} = $ils;
     return bless $self, $class;
 
@@ -61,7 +61,13 @@ sub process_request {
 
         #bail out for now
     }
-    my $handler = NCIP::Handler->new( $self->namespace(), $request_type );
+    my $handler = NCIP::Handler->new(
+        {
+            namespace => $self->namespace(),
+            type      => $request_type,
+            ils       => $self->ils
+        }
+    );
     return $handler->handle( $self->xmldoc );
 }
 
