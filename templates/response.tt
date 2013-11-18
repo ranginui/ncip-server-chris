@@ -2,6 +2,20 @@
 
 <NCIPMessage>
     <[% messagetype %]>
-
+       <ResponseHeader>
+            <FromAgencyId>
+                <UniqueAgencyId>
+                    <Scheme>[% schemeurl %]</Scheme>
+                    <Value>[% fromagency %]</Value>
+                </UniqueAgencyId>
+            </FromAgencyId>
+            <ToAgencyId>
+                <UniqueAgencyId>
+                    <Scheme>[% schemeurl %]</Scheme>
+                    <Value>[% toagency %]</Value>
+                </UniqueAgencyId>
+            </ToAgencyId>
+        </ResponserHeader>
+        
     </[% messagetype %]>
 </NCIPMessage>
