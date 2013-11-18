@@ -3,7 +3,7 @@
 #
 #         FILE: Koha.pm
 #
-#  DESCRIPTION: 
+#  DESCRIPTION:
 #
 #        FILES: ---
 #         BUGS: ---
@@ -14,7 +14,9 @@
 #      CREATED: 05/11/13 11:14:09
 #     REVISION: ---
 #===============================================================================
+package NCIP::ILS::Koha;
 
 use Modern::Perl;
- 
+use Object::Tiny qw{ name };
+
 1;

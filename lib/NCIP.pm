@@ -4,8 +4,9 @@ use NCIP::Handler;
 use Modern::Perl;
 use XML::LibXML;
 use Try::Tiny;
+use Module::Load;
 
-use Object::Tiny qw{xmldoc config namespace};
+use Object::Tiny qw{xmldoc config namespace ils};
 
 our $VERSION = '0.01';
 our $nsURI   = 'http://www.niso.org/2008/ncip';
@@ -31,6 +32,12 @@ sub new {
     my $config     = NCIP::Configuration->new($config_dir);
     $self->{config}    = $config;
     $self->{namespace} = $nsURI;
+
+    # load the ILS dependent module
+    my $module = 'NCIP::ILS::' . $config->('NCIP.ils.value');
+    load $module || die "Can not load ILS module $module";
+    my $ils = $module->new(  name => $config->('NCIP.ils.value')  );
+    $self->{'ils'} = $ils;
     return bless $self, $class;
 
 }
