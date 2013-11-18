@@ -33,6 +33,10 @@ sub handle {
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'ItemIdentifierValue' );
         my $item = NCIP::Item->new( { itemid => $item_id->textContent(), ils => $self->ils} );
+        my ($itemdata,$error) = $item->itemdata();
+        if ($error){
+# handle error here
+        }
         warn $item->itemid();
     }
     return $self->type;

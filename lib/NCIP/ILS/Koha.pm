@@ -19,4 +19,9 @@ package NCIP::ILS::Koha;
 use Modern::Perl;
 use Object::Tiny qw{ name };
 
+
+sub itemdata {
+    my $self = shift;
+    return ( {barcode=>'123',title=>'fish'}, undef);
+}
 1;
