@@ -1,8 +1,8 @@
-package NCIP::Handler::LookupItem;
+package NCIP::Handler::LookupUser;
 
 =head1
 
-  NCIP::Handler::LookupItem
+  NCIP::Handler::LookupUser
 
 =head1 SYNOPSIS
 
@@ -26,15 +26,16 @@ sub handle {
     my $xmldoc = shift;
     if ($xmldoc) {
         # Given our xml document, lets find the itemid
-        my ($item_id) =
+        my ($user_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
-            'ItemIdentifierValue' );
-        my $item = NCIP::Item->new( { itemid => $item_id->textContent(), ils => $self->ils} );
-        my ($itemdata,$error) = $item->itemdata();
-        if ($error){
+            'UserIdentifierValue' );
+          warn $user_id->textContent();
+#        my $item = NCIP::User->new( { itemid => $user_id->textContent(), ils => $self->ils} );
+#        my ($itemdata,$error) = $item->itemdata();
+#       if ($error){
 # handle error here
-        }
-        warn $item->itemid();
+#        }
+#        warn $user->itemid();
     }
     return $self->type;
 }

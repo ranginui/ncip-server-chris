@@ -50,3 +50,9 @@ ok(
     'Try looking up an item, with agency'
 );
 is( $response, 'LookupItem', 'We got lookupitem with agency' );
+
+my $lookupuser = read_file('t/sample_data/LookupUser.xml');
+
+ok( $response = $ncip->process_request($lookupuser), 'Try looking up a user' );
+is( $response, 'LookupUser', 'We got lookupuser' );
+
