@@ -18,13 +18,13 @@ package NCIP::Handler;
 
 use Modern::Perl;
 use Object::Tiny qw{ type namespace ils };
-
-use NCIP::Handler::LookupItem;
+use Module::Load;
 
 sub new {
     my $class    = shift;
     my $params   = shift;
     my $subclass = __PACKAGE__ . "::" . $params->{type};
+    load $subclass || die "Can't load module $subclass";
     my $self     = bless {
         type      => $params->{type},
         namespace => $params->{namespace},

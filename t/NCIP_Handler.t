@@ -35,9 +35,8 @@ ok( my $response = $handler->handle() );
 
 $type = 'LookupUser';
 ok(
-    $handler =
-          NCIP::Handler->new( { namespace => $namespace, type => $type } ),
-              'Create new LookupItem handler'
-              );
+    $handler = NCIP::Handler->new( { namespace => $namespace, type => $type } ),
+    'Create new LookupItem handler'
+);
 ok( $response = $handler->handle() );
 

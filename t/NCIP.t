@@ -19,7 +19,7 @@ use strict;
 use warnings;
 use File::Slurp;
 
-use Test::More tests => 7;    # last test to print
+use Test::More tests => 9;    # last test to print
 
 use lib 'lib';
 
@@ -51,8 +51,7 @@ ok(
 );
 is( $response, 'LookupItem', 'We got lookupitem with agency' );
 
-my $lookupuser = read_file('t/sample_data/LookupUser.xml');
-
+my $lookupuser = read_file('t/sample_data/LookupUser.xml') || die "Cant open file";
 ok( $response = $ncip->process_request($lookupuser), 'Try looking up a user' );
 is( $response, 'LookupUser', 'We got lookupuser' );
 

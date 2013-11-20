@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<ns1:NCIPMessage xmlns:ns1="http://www.niso.org/2008/ncip" ns1:version="http://www.niso.org/schemas/ncip/v2_01/ncip_v2_01.xsd">
+    <ns1:LookupUser>
+
+        <ns1:UserId>
+            <ns1:UserIdentifierValue>381</ns1:UserIdentifierValue>
+        </ns1:UserId>
+        
+        <ns1:LoanedItemsDesired/>
+        <ns1:RequestedItemsDesired/>
+        <ns1:UserFiscalAccountDesired/>
+
+    </ns1:LookupUser>
+</ns1:NCIPMessage>
+
