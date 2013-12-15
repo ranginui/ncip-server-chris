@@ -34,5 +34,5 @@
   </version>
 
   <ils value='Koha' />
-
+  <namespace value= '' />
 </acsconfig>

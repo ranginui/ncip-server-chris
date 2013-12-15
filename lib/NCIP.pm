@@ -9,7 +9,7 @@ use Module::Load;
 use Object::Tiny qw{xmldoc config namespace ils};
 
 our $VERSION = '0.01';
-our $nsURI   = 'http://www.niso.org/2008/ncip';
+our $strict_validation = 0; # move to config file
 
 =head1 NAME
   
@@ -31,7 +31,7 @@ sub new {
     my $self       = {};
     my $config     = NCIP::Configuration->new($config_dir);
     $self->{config}    = $config;
-    $self->{namespace} = $nsURI;
+    $self->{namespace} = $config->('NCIP.namespace.value'); 
 
     # load the ILS dependent module
     my $module = 'NCIP::ILS::' . $config->('NCIP.ils.value');
@@ -57,6 +57,7 @@ sub process_request {
 
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
+        warn "We can't find request type";
         return;
 
         #bail out for now
@@ -86,25 +87,26 @@ sub handle_initiation {
         warn "Invalid xml, caught error: $_";
     };
     if ($dom) {
-
         # should check validity with validate at this point
-        if ( $self->validate($dom) ) {
-            my $request_type = $self->parse_request($dom);
+        if ( $strict_validation && !$self->validate($dom) ) {
 
-            # do whatever we should do to initiate, then hand back request_type
-            if ($request_type) {
-                $self->{xmldoc} = $dom;
-                return $request_type;
-            }
-        }
-        else {
-            warn "Not valid xml";
+            # we want strict validation, bail out if dom doesnt validate
+            warn " Not valid xml";
 
-            # not valid throw error
+            # throw/log error
             return;
+        }
+        my $request_type = $self->parse_request($dom);
+
+        # do whatever we should do to initiate, then hand back request_type
+        if ($request_type) {
+            $self->{xmldoc} = $dom;
+            return $request_type;
         }
     }
     else {
+        warn "We have no DOM";
+
         return;
     }
 }
@@ -132,7 +134,7 @@ sub validate {
 sub parse_request {
     my $self  = shift;
     my $dom   = shift;
-    my $nodes = $dom->getElementsByTagNameNS( $nsURI, 'NCIPMessage' );
+    my $nodes = $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
     if ($nodes) {
         my @childnodes = $nodes->[0]->childNodes();
         if ( $childnodes[1] ) {
