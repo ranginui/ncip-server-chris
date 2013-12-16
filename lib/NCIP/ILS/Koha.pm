@@ -19,9 +19,18 @@ package NCIP::ILS::Koha;
 use Modern::Perl;
 use Object::Tiny qw{ name };
 
+use C4::Members qw{ GetMemberDetails };
 
 sub itemdata {
     my $self = shift;
-    return ( {barcode=>'123',title=>'fish'}, undef);
+    return ( { barcode => '123', title => 'fish' }, undef );
 }
+
+sub userdata {
+    my $self     = shift;
+    my $userid   = shift;
+    my $userdata = GetMemberDetails( undef, $userid );
+    return $userdata;
+}
+
 1;

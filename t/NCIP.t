@@ -53,5 +53,5 @@ is( $response, 'LookupItem', 'We got lookupitem with agency' );
 
 my $lookupuser = read_file('t/sample_data/LookupUser.xml') || die "Cant open file";
 ok( $response = $ncip->process_request($lookupuser), 'Try looking up a user' );
-is( $response, 'LookupUser', 'We got lookupuser' );
+is( $response, 'FLO-WHEELOCK', 'Got the user we expected' );
 

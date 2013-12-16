@@ -13,11 +13,10 @@ package NCIP::Handler::LookupUser;
 
 =cut
 
-
 use Modern::Perl;
 
 use NCIP::Handler;
-use NCIP::Item;
+use NCIP::User;
 
 our @ISA = qw(NCIP::Handler);
 
@@ -25,19 +24,19 @@ sub handle {
     my $self   = shift;
     my $xmldoc = shift;
     if ($xmldoc) {
+
         # Given our xml document, lets find the itemid
         my ($user_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'UserIdentifierValue' );
-          warn $user_id->textContent();
-#        my $item = NCIP::User->new( { itemid => $user_id->textContent(), ils => $self->ils} );
-#        my ($itemdata,$error) = $item->itemdata();
-#       if ($error){
-# handle error here
-#        }
-#        warn $user->itemid();
+
+        my $user = NCIP::User->new(
+            { userid => $user_id->textContent(), ils => $self->ils } );
+        $user->initialise();
+        use Data::Dumper;
+        warn Dumper $user->userdata();
+        return $user->userid();
     }
-    return $self->type;
 }
 
 1;
