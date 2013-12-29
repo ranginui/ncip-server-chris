@@ -5,11 +5,12 @@ use Modern::Perl;
 use XML::LibXML;
 use Try::Tiny;
 use Module::Load;
+use Template;
 
 use Object::Tiny qw{xmldoc config namespace ils};
 
-our $VERSION = '0.01';
-our $strict_validation = 0; # move to config file
+our $VERSION           = '0.01';
+our $strict_validation = 0;        # move to config file
 
 =head1 NAME
   
@@ -31,7 +32,7 @@ sub new {
     my $self       = {};
     my $config     = NCIP::Configuration->new($config_dir);
     $self->{config}    = $config;
-    $self->{namespace} = $config->('NCIP.namespace.value'); 
+    $self->{namespace} = $config->('NCIP.namespace.value');
 
     # load the ILS dependent module
     my $module = 'NCIP::ILS::' . $config->('NCIP.ils.value');
@@ -49,18 +50,16 @@ sub new {
 =cut
 
 sub process_request {
-    my $self = shift;
-    my $xml  = shift;
-
+    my $self           = shift;
+    my $xml            = shift;
     my ($request_type) = $self->handle_initiation($xml);
     unless ($request_type) {
 
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
         warn "We can't find request type";
-        return;
-
-        #bail out for now
+        my $output = $self->_error("We can't find request type");
+        return $output;
     }
     my $handler = NCIP::Handler->new(
         {
@@ -80,13 +79,12 @@ sub handle_initiation {
     my $self = shift;
     my $xml  = shift;
     my $dom;
-    try {
-        $dom = XML::LibXML->load_xml( string => $xml );
+    eval { $dom = XML::LibXML->load_xml( string => $xml ); };
+    if ($@) {
+        warn "Invalid xml, caught error: $@";
     }
-    catch {
-        warn "Invalid xml, caught error: $_";
-    };
     if ($dom) {
+
         # should check validity with validate at this point
         if ( $strict_validation && !$self->validate($dom) ) {
 
@@ -132,15 +130,19 @@ sub validate {
 }
 
 sub parse_request {
-    my $self  = shift;
-    my $dom   = shift;
-    my $nodes = $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
+    my $self = shift;
+    my $dom  = shift;
+    my $nodes =
+      $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
     if ($nodes) {
+        warn "got nodes";
         my @childnodes = $nodes->[0]->childNodes();
+        warn $nodes;
         if ( $childnodes[1] ) {
             return $childnodes[1]->localname();
         }
         else {
+            warn "Got a node, but no child node";
             return;
         }
     }
@@ -151,4 +153,15 @@ sub parse_request {
     return;
 }
 
+sub _error {
+    my $self = shift;
+    my $error_detail = shift;
+    my $vars;
+    $vars->{'error_detail'} = $error_detail;
+    my $template = Template->new(
+        { INCLUDE_PATH => $self->config->('NCIP.templates.value'), } );
+    my $output;
+    $template->process( 'problem.tt', $vars, \$output );
+    return $output;
+}
 1;
