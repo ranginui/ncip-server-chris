@@ -33,9 +33,12 @@ sub handle {
         my $user = NCIP::User->new(
             { userid => $user_id->textContent(), ils => $self->ils } );
         $user->initialise();
-        use Data::Dumper;
-        warn Dumper $user->userdata();
-        return $user->userid();
+        my $vars;
+        $vars->{'messagetype'} = 'LookupUserResponse';
+        $vars->{'user'} = $user;
+        my $output = $self->render_output('response.tt',$vars);
+        return $output;
+
     }
 }
 

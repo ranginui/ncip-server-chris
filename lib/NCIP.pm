@@ -63,9 +63,10 @@ sub process_request {
     }
     my $handler = NCIP::Handler->new(
         {
-            namespace => $self->namespace(),
-            type      => $request_type,
-            ils       => $self->ils
+            namespace    => $self->namespace(),
+            type         => $request_type,
+            ils          => $self->ils,
+            template_dir => $self->config->('NCIP.templates.value'),
         }
     );
     return $handler->handle( $self->xmldoc );
@@ -137,9 +138,8 @@ sub parse_request {
     if ($nodes) {
         warn "got nodes";
         my @childnodes = $nodes->[0]->childNodes();
-        warn $nodes;
-        if ( $childnodes[1] ) {
-            return $childnodes[1]->localname();
+        if ( $childnodes[0] ) {
+            return $childnodes[0]->localname();
         }
         else {
             warn "Got a node, but no child node";
@@ -154,7 +154,7 @@ sub parse_request {
 }
 
 sub _error {
-    my $self = shift;
+    my $self         = shift;
     my $error_detail = shift;
     my $vars;
     $vars->{'error_detail'} = $error_detail;

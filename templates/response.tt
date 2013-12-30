@@ -15,7 +15,7 @@
                     <Value>[% toagency %]</Value>
                 </UniqueAgencyId>
             </ToAgencyId>
-        </ResponserHeader>
+        </ResponseHeader>
         
     </[% messagetype %]>
 </NCIPMessage>
