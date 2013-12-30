@@ -16,6 +16,9 @@
                 </UniqueAgencyId>
             </ToAgencyId>
         </ResponseHeader>
-        
+    [% myfile = "includes/$messagetype" _ ".inc" %]
+    [% INCLUDE $myfile %]    
     </[% messagetype %]>
 </NCIPMessage>
+
+
