@@ -36,8 +36,13 @@ sub handle {
         my $user = NCIP::User->new(
             { userid => $user_id->textContent(), ils => $self->ils } );
         $user->initialise();
-        my $root = $xmldoc->documentElement();
+
+        # if we have blank user, we need to return that
+        # and can skip looking for elementtypes
+
+        my $root     = $xmldoc->documentElement();
         my @elements = $root->findnodes('LookupUser/UserElementType/Value');
+
         #set up the variables for our template
         my $vars;
         $vars->{'messagetype'} = 'LookupUserResponse';

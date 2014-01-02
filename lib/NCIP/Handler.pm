@@ -41,7 +41,11 @@ sub render_output {
 
     my $vars     = shift;
     my $template = Template->new(
-        { INCLUDE_PATH => $self->templates, } );
+        {
+            INCLUDE_PATH => $self->templates,
+            POST_CHOMP   => 1
+        }
+    );
     my $output;
     $template->process( $templatename, $vars, \$output );
     return $output;
