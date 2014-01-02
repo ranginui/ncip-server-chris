@@ -1,1 +1,3 @@
-Look up user
+[% FOREACH element IN elements %]
+  [% element.textContent %]
+[% END %]

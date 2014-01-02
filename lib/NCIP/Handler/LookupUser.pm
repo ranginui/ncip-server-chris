@@ -25,18 +25,25 @@ sub handle {
     my $xmldoc = shift;
     if ($xmldoc) {
 
-        # Given our xml document, lets find the itemid
+        # Given our xml document, lets find our userid
         my ($user_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'UserIdentifierValue' );
 
+        # We may get a password, username combo instead of userid
+        # Need to deal with that also
+
         my $user = NCIP::User->new(
             { userid => $user_id->textContent(), ils => $self->ils } );
         $user->initialise();
+        my $root = $xmldoc->documentElement();
+        my @elements = $root->findnodes('LookupUser/UserElementType/Value');
+        #set up the variables for our template
         my $vars;
         $vars->{'messagetype'} = 'LookupUserResponse';
-        $vars->{'user'} = $user;
-        my $output = $self->render_output('response.tt',$vars);
+        $vars->{'elements'}    = \@elements;
+        $vars->{'user'}        = $user;
+        my $output = $self->render_output( 'response.tt', $vars );
         return $output;
 
     }
