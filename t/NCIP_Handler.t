@@ -18,13 +18,25 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3;    # last test to print
+use Test::More tests => 4;    # last test to print
 use lib 'lib';
 
 use_ok('NCIP::Handler');
-my $namespace='http://test';
+my $namespace = 'http://test';
 
 my $type = 'LookupItem';
 
-ok( my $handler = NCIP::Handler->new($namespace, $type), 'Create new handler' );
+ok(
+    my $handler =
+      NCIP::Handler->new( { namespace => $namespace, type => $type } ),
+    'Create new LookupItem handler'
+);
 ok( my $response = $handler->handle() );
+
+$type = 'LookupUser';
+ok(
+    $handler = NCIP::Handler->new( { namespace => $namespace, type => $type } ),
+    'Create new LookupItem handler'
+);
+ok( $response = $handler->handle() );
+

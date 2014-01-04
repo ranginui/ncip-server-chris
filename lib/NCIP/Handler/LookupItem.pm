@@ -1,21 +1,17 @@
 package NCIP::Handler::LookupItem;
 
-#
-#===============================================================================
-#
-#         FILE: LookupItem.pm
-#
-#  DESCRIPTION:
-#
-#        FILES: ---
-#         BUGS: ---
-#        NOTES: ---
-#       AUTHOR: Chris Cormack (rangi), chrisc@catalyst.net.nz
-# ORGANIZATION: Koha Development Team
-#      VERSION: 1.0
-#      CREATED: 19/09/13 10:52:44
-#     REVISION: ---
-#===============================================================================
+=head1
+
+  NCIP::Handler::LookupItem
+
+=head1 SYNOPSIS
+
+    Not to be called directly, NCIP::Handler will pick the appropriate Handler 
+    object, given a message type
+
+=head1 FUNCTIONS
+
+=cut
 
 use Modern::Perl;
 
@@ -28,11 +24,25 @@ sub handle {
     my $self   = shift;
     my $xmldoc = shift;
     if ($xmldoc) {
+
+        # Given our xml document, lets find the itemid
         my ($item_id) =
-          $xmldoc->getElementsByTagNameNS( $self->namespace(), 'ItemId' );
-        my $item = NCIP::Item->new( { itemid => $item_id } );
+          $xmldoc->getElementsByTagNameNS( $self->namespace(),
+            'ItemIdentifierValue' );
+        my $item = NCIP::Item->new(
+            { itemid => $item_id->textContent(), ils => $self->ils } );
+        my ( $itemdata, $error ) = $item->itemdata();
+        if ($error) {
+
+            # handle error here
+        }
+        warn $item->itemid();
     }
-    return $self->type;
+    my $vars;
+    $vars->{'messagetype'} = 'LookupItemResponse';
+    $vars->{'item'}        = $item;
+    my $output = $self->render_output( 'response.tt', $vars );
+    return $output;
 }
 
 1;

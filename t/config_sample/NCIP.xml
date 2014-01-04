@@ -33,4 +33,7 @@
   <version>
   </version>
 
+  <ils value='Koha' />
+  <namespace value= '' />
+  <templates value= 'templates/' />
 </acsconfig>

@@ -30,7 +30,6 @@ package NCIP::Configuration;
 =cut
 
 use Modern::Perl;
-
 use NCIP::Configuration::Service;
 use base qw(Config::Merge);
 

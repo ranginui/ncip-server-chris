@@ -1,0 +1,24 @@
+[% INCLUDE 'includes/header.inc' %]
+
+<NCIPMessage>
+    <[% messagetype %]>
+       <ResponseHeader>
+            <FromAgencyId>
+                <UniqueAgencyId>
+                    <Scheme>[% schemeurl %]</Scheme>
+                    <Value>[% fromagency %]</Value>
+                </UniqueAgencyId>
+            </FromAgencyId>
+            <ToAgencyId>
+                <UniqueAgencyId>
+                    <Scheme>[% schemeurl %]</Scheme>
+                    <Value>[% toagency %]</Value>
+                </UniqueAgencyId>
+            </ToAgencyId>
+        </ResponseHeader>
+    [% myfile = "includes/$messagetype" _ ".inc" %]
+    [% INCLUDE $myfile %]    
+    </[% messagetype %]>
+</NCIPMessage>
+
+
