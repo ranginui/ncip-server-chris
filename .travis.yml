@@ -16,6 +16,7 @@ before_install:
   - cpanm --notest XML::LibXML
   - cpanm --notest File::Slurp
   - cpanm --notest Object::Tiny
+  - cpanm --notest Template
 install: perl Build.PL && ./Build test
 script: perl Build.PL && ./Build build && cover -test -report coveralls
 notifications:
