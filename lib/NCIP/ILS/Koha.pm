@@ -20,8 +20,9 @@ use Modern::Perl;
 use Object::Tiny qw{ name };
 
 use C4::Members qw{ GetMemberDetails };
+use C4::Circulation qw { AddReturned CanBookBeIssued AddIssue }
 
-sub itemdata {
+  sub itemdata {
     my $self = shift;
     return ( { barcode => '123', title => 'fish' }, undef );
 }
@@ -31,6 +32,15 @@ sub userdata {
     my $userid   = shift;
     my $userdata = GetMemberDetails( undef, $userid );
     return $userdata;
+}
+
+sub checkin {
+    my $self    = shift;
+    my $barcode = shift;
+    my $result  = AddReturn( $barcode, $branch, $exemptfine, $dropbox );
+}
+
+sub checkout {
 }
 
 1;
