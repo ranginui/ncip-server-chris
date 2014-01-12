@@ -31,12 +31,22 @@ sub handle {
         my @elements = $root->findnodes('CheckOutItem/ItemElementType/Value');
 
         # checkout the item
-        my $checkout = $self->ils->checkout( $userid, $itemid );
+        my ( $error, $messages ) = $self->ils->checkout( $userid, $itemid );
         my $vars;
+        my $output;
+        my $vars->{'barcode'}=$itemid;
         $vars->{'messagetype'} = 'CheckOutItemResponse';
-        $vars->{'elements'}    = \@elements;
-        $vars->{'checkout'}    = $checkout;
-        my $output = $self->render_output( 'response.tt', $vars );
+        if ($error) {
+            $vars->{'processingerror'}        = 1;
+            $vars->{'processingerrortype'}    = $messages;
+            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
+            $output = $self->render_output( 'problem.tt', $vars );
+        }
+        else {
+            $vars->{'elements'} = \@elements;
+
+            $output = $self->render_output( 'response.tt', $vars );
+        }
         return $output;
     }
 }

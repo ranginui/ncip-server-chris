@@ -43,6 +43,20 @@ sub checkin {
 }
 
 sub checkout {
+    my $self = shift;
+    my $userid = shift;
+    my $barcode = shift;
+    my ($error, $confirm) = CanBookBeIssued ( $userid, $barcode );
+    #( $issuingimpossible, $needsconfirmation ) =  CanBookBeIssued( $borrower, 
+    #                      $barcode, $duedatespec, $inprocess, $ignore_reserves );
+    if ($error) { # plus the confirmation?
+# Can't issue item, return error hash
+        return ( 1, $error);
+    }
+    else {
+        AddIssue($userid,$barcode);
+        return ( 0 );
+    }
 }
 
 1;

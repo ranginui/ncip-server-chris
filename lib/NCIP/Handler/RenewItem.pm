@@ -1,8 +1,8 @@
-package NCIP::Handler::CheckInItem;
+package NCIP::Handler::RenewItem;
 
 =head1
 
-  NCIP::Handler::CheckInItem
+  NCIP::Handler::RenewItem
 
 =head1 SYNOPSIS
 
@@ -25,14 +25,14 @@ sub handle {
     if ($xmldoc) {
         my $root = $xmldoc->documentElement();
         my $itemid =
-          $root->findnodes('CheckInItem/UniqueItemId/ItemIdentifierValue');
-        my @elements = $root->findnodes('CheckInItem/ItemElementType/Value');
+          $root->findnodes('RenewItem/UniqueItemId/ItemIdentifierValue');
+        my @elements = $root->findnodes('RenewItem/ItemElementType/Value');
 
         # checkin the item
-        my $checkin = $self->ils->checkin( $itemid );
+        my $renewed = $self->ils->renew( $itemid );
         my $output;
         my $vars;
-        $vars->{'messagetype'} = 'CheckInItemResponse';
+        $vars->{'messagetype'} = 'RenewItemResponse';
         $vars->{'barcode'} = $itemid;
         if ( !$checkin->{success} ) {
             $vars->{'processingerror'} = 1;
