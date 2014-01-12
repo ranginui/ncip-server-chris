@@ -1,8 +1,19 @@
 [% INCLUDE 'includes/header.inc' %]
 <NCIPMessage>
-  <Problem>
-    <ProblemDetail>[% error_detail %]</ProblemDetail>
-  </Problem>
-
+  <[% messagetype %]>
+    [% IF processingerror %]
+    <Problem>
+      <ProcessingError>
+        <ProcessingErrorType>
+          <Value>[% processingerrortype %]</Value>
+        </ProcessingErrorType>
+        <ProcessingErrorElement>
+          <ElementName>[% processingerrorelement %]</ElementName>
+          <ProcessingErrorValue>[% processingerrorvalue %]</ProcessingErrorValue>
+        </ProcessingErrorElement>
+      </ProcessingError> 
+      <ProblemDetail>[% error_detail %]</ProblemDetail>
+    </Problem>
+  </[% messagetype %]>
 </NCIPMessage>
 

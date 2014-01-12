@@ -37,7 +37,9 @@ sub userdata {
 sub checkin {
     my $self    = shift;
     my $barcode = shift;
-    my $result  = AddReturn( $barcode, $branch, $exemptfine, $dropbox );
+    my ($success, $messages, $issue, $borrower)  = AddReturn( $barcode, $branch, $exemptfine, $dropbox );
+    my $result = { success => $success, messages  => $messages, iteminformation => $issue, borrower=> $borrower};
+    return $result;
 }
 
 sub checkout {

@@ -32,11 +32,20 @@ sub handle {
 
         # checkin the item
         my $checkin = $self->ils->checkin( $userid, $itemid );
+        my $output;
         my $vars;
         $vars->{'messagetype'} = 'CheckInItemResponse';
-        $vars->{'elements'}    = \@elements;
-        $vars->{'checkin'}     = $checkin;
-        my $output = $self->render_output( 'response.tt', $vars );
+
+        if ( !$checkin->{success} ) {
+
+            $output = $self->render_output( 'problem.tt', $vars );
+        }
+        else {
+
+            $vars->{'elements'} = \@elements;
+            $vars->{'checkin'}  = $checkin;
+            $output = $self->render_output( 'response.tt', $vars );
+        }
         return $output;
     }
 }
