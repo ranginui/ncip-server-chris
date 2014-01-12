@@ -24,20 +24,20 @@ sub handle {
     my $xmldoc = shift;
     if ($xmldoc) {
         my $root = $xmldoc->documentElement();
-        my $userid =
-          $root->findnodes('CheckInItem/UniqueUserId/UserIdentifierValue');
         my $itemid =
           $root->findnodes('CheckInItem/UniqueItemId/ItemIdentifierValue');
         my @elements = $root->findnodes('CheckInItem/ItemElementType/Value');
 
         # checkin the item
-        my $checkin = $self->ils->checkin( $userid, $itemid );
+        my $checkin = $self->ils->checkin( $itemid );
         my $output;
         my $vars;
         $vars->{'messagetype'} = 'CheckInItemResponse';
-
+        $vars->{'barcode'} = $itemid;
         if ( !$checkin->{success} ) {
-
+            $var->{'processingerror'} = 1;
+            $var->{'processingerrortype'} = $checkin->{'messages'};
+            $var->{'processingerrorelement'} = 'UniqueItemIdentifier';
             $output = $self->render_output( 'problem.tt', $vars );
         }
         else {
