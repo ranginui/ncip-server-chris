@@ -34,16 +34,16 @@ sub handle {
         my $vars;
         $vars->{'messagetype'} = 'RenewItemResponse';
         $vars->{'barcode'} = $itemid;
-        if ( !$checkin->{success} ) {
+        if ( !$renewed->{success} ) {
             $vars->{'processingerror'} = 1;
-            $vars->{'processingerrortype'} = $checkin->{'messages'};
+            $vars->{'processingerrortype'} = $renewed->{'messages'};
             $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
             $output = $self->render_output( 'problem.tt', $vars );
         }
         else {
 
             $vars->{'elements'} = \@elements;
-            $vars->{'checkin'}  = $checkin;
+            $vars->{'renewed'}  = $renewed;
             $output = $self->render_output( 'response.tt', $vars );
         }
         return $output;

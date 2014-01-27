@@ -59,23 +59,26 @@ sub checkout {
     my $borrower = GetMemberDetails( undef, $userid );
     my $error;
     my $confirm;
-     my ($usernum, $userid, $usercnum, $userfirstname, $usersurname, $userbranch, $branchname, $userflags, $emailaddress, $branchprinter, $persona)= @_;
+    my (
+        $usernum,      $userid,        $usercnum,   $userfirstname,
+        $usersurname,  $userbranch,    $branchname, $userflags,
+        $emailaddress, $branchprinter, $persona
+    ) = @_;
     my @USERENV = (
-    1,
-    'test',
-    'MASTERTEST',
-    'Test',
-    'Test',
-    'AS', #branchcode need to set this properly
-    'Auckland',
-    0,
+        1,
+        'test',
+        'MASTERTEST',
+        'Test',
+        'Test',
+        'AS',    #branchcode need to set this properly
+        'Auckland',
+        0,
     );
 
-C4::Context->_new_userenv ('DUMMY_SESSION_ID');
-C4::Context->set_userenv ( @USERENV );
+    C4::Context->_new_userenv('DUMMY_SESSION_ID');
+    C4::Context->set_userenv(@USERENV);
 
-
-   if ($borrower) {
+    if ($borrower) {
 
         ( $error, $confirm ) = CanBookBeIssued( $borrower, $barcode );
 
@@ -91,7 +94,7 @@ C4::Context->set_userenv ( @USERENV );
         }
         else {
             my $datedue = AddIssue( $borrower, $barcode );
-            return (0, undef, $datedue);    #successfully issued
+            return ( 0, undef, $datedue );    #successfully issued
         }
     }
     else {
@@ -100,4 +103,22 @@ C4::Context->set_userenv ( @USERENV );
     }
 }
 
+sub renew {
+    my $self     = shift;
+    my $barcode  = shift;
+    my $userid   = shift;
+    my $borrower = GetMemberDetails( undef, $userid );
+    if ($borrower) {
+        my $datedue = AddRenewal( $barcode, $borrower->{'borrowernumber'} );
+        my $result = {
+            success => 1,
+            datedue => $datedue
+        };
+        return $result;
+
+    }
+    else {
+#handle stuff here
+    }
+}
 1;
