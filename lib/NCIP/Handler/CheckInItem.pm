@@ -29,7 +29,8 @@ sub handle {
         my @elements = $root->findnodes('CheckInItem/ItemElementType/Value');
 
         # checkin the item
-        my $checkin = $self->ils->checkin( $itemid );
+        my $branch='AS'; # where the hell do we get this from???
+        my $checkin = $self->ils->checkin( $itemid,$branch );
         my $output;
         my $vars;
         $vars->{'messagetype'} = 'CheckInItemResponse';

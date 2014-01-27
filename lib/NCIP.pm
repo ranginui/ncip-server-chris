@@ -136,7 +136,6 @@ sub parse_request {
     my $nodes =
       $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
     if ($nodes) {
-        warn "got nodes";
         my @childnodes = $nodes->[0]->childNodes();
         if ( $childnodes[0] ) {
             return $childnodes[0]->localname();

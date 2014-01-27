@@ -20,9 +20,9 @@ use Modern::Perl;
 use Object::Tiny qw{ name };
 
 use C4::Members qw{ GetMemberDetails };
-use C4::Circulation qw { AddReturned CanBookBeIssued AddIssue }
+use C4::Circulation qw { AddReturn CanBookBeIssued AddIssue };
 
-  sub itemdata {
+sub itemdata {
     my $self = shift;
     return ( { barcode => '123', title => 'fish' }, undef );
 }
@@ -37,25 +37,36 @@ sub userdata {
 sub checkin {
     my $self    = shift;
     my $barcode = shift;
-    my ($success, $messages, $issue, $borrower)  = AddReturn( $barcode, $branch, $exemptfine, $dropbox );
-    my $result = { success => $success, messages  => $messages, iteminformation => $issue, borrower=> $borrower};
+    my $branch = shift;
+    my $exemptfine = undef;
+    my $dropbox = undef;
+    my ( $success, $messages, $issue, $borrower ) =
+      AddReturn( $barcode, $branch, $exemptfine, $dropbox );
+    my $result = {
+        success         => $success,
+        messages        => $messages,
+        iteminformation => $issue,
+        borrower        => $borrower
+    };
     return $result;
 }
 
 sub checkout {
-    my $self = shift;
-    my $userid = shift;
+    my $self    = shift;
+    my $userid  = shift;
     my $barcode = shift;
-    my ($error, $confirm) = CanBookBeIssued ( $userid, $barcode );
-    #( $issuingimpossible, $needsconfirmation ) =  CanBookBeIssued( $borrower, 
-    #                      $barcode, $duedatespec, $inprocess, $ignore_reserves );
-    if ($error) { # plus the confirmation?
-# Can't issue item, return error hash
-        return ( 1, $error);
+    my ( $error, $confirm ) = CanBookBeIssued( $userid, $barcode );
+
+  #( $issuingimpossible, $needsconfirmation ) =  CanBookBeIssued( $borrower,
+  #                      $barcode, $duedatespec, $inprocess, $ignore_reserves );
+    if ( $error || $confirm ) {
+
+        # Can't issue item, return error hash
+        return ( 1, $error || $confirm );
     }
     else {
-        AddIssue($userid,$barcode);
-        return ( 0 );
+        AddIssue( $userid, $barcode );
+        return (0);    #successfully issued
     }
 }
 

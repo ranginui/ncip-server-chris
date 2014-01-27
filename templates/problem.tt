@@ -4,16 +4,20 @@
     [% IF processingerror %]
     <Problem>
       <ProcessingError>
-        <ProcessingErrorType>
-          <Value>
-          [% SWITCH processingerrortype %]
-            [% CASE 'BadBarcode' %]
-              We could not find an item with that barcode
-            [% CASE 'NotIssued' %]
-              The item is not on loan
-            [% END %]
+        [% FOREACH errormessage IN processingerrortype.keys %]
+          <ProcessingErrorType>
+            <Value>
+            [% SWITCH errormessage %]
+              [% CASE 'BadBarcode' %]
+                We could not find an item with that barcode
+              [% CASE 'NotIssued' %]
+                The item is not on loan
+              [% END %]
+
           </Value>
         </ProcessingErrorType>
+        [% END %]
+     [% END %]
         <ProcessingErrorElement>
           <ElementName>[% processingerrorelement %]</ElementName>
           <ProcessingErrorValue>[% barcode %]</ProcessingErrorValue>
