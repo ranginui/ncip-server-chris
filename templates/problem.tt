@@ -12,8 +12,12 @@
                 We could not find an item with that barcode
               [% CASE 'NotIssued' %]
                 The item is not on loan
+              [% CASE 'RESERVED' %]
+                The item is on hold for another borrower
+              [% CASE 'RENEW_ISSUE' %]
+                This item is already on loan to this borrower
               [% END %]
-
+               
           </Value>
         </ProcessingErrorType>
         [% END %]

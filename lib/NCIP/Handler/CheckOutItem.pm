@@ -31,20 +31,23 @@ sub handle {
         my @elements = $root->findnodes('CheckOutItem/ItemElementType/Value');
 
         # checkout the item
-        my ( $error, $messages ) = $self->ils->checkout( $userid, $itemid );
+        my ( $error, $messages, $datedue ) = $self->ils->checkout( $userid, $itemid );
         my $vars;
         my $output;
-        my $vars->{'barcode'}=$itemid;
+        $vars->{'barcode'}=$itemid;
         $vars->{'messagetype'} = 'CheckOutItemResponse';
         if ($error) {
+            warn "Error!!!";
             $vars->{'processingerror'}        = 1;
+            use Data::Dumper;
+            warn Dumper $messages;
             $vars->{'processingerrortype'}    = $messages;
             $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
             $output = $self->render_output( 'problem.tt', $vars );
         }
         else {
             $vars->{'elements'} = \@elements;
-
+            $vars->{'datedue'} = $datedue;
             $output = $self->render_output( 'response.tt', $vars );
         }
         return $output;
