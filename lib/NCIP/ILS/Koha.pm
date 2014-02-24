@@ -22,10 +22,18 @@ use Object::Tiny qw{ name };
 use C4::Members qw{ GetMemberDetails };
 use C4::Circulation qw { AddReturn CanBookBeIssued AddIssue };
 use C4::Context;
+use C4::Items qw { GetItem };
 
 sub itemdata {
-    my $self = shift;
-    return ( { barcode => '123', title => 'fish' }, undef );
+    my $self     = shift;
+    my $barcode  = shift;
+    my $itemdata = GetItem( undef, $barcode );
+    if ($itemdata) {
+        return ( $itemdata, undef );
+    }
+    else {
+        return ( undef, 1 );    # item not found error
+    }
 }
 
 sub userdata {
@@ -59,11 +67,6 @@ sub checkout {
     my $borrower = GetMemberDetails( undef, $userid );
     my $error;
     my $confirm;
-    my (
-        $usernum,      $userid,        $usercnum,   $userfirstname,
-        $usersurname,  $userbranch,    $branchname, $userflags,
-        $emailaddress, $branchprinter, $persona
-    ) = @_;
     my @USERENV = (
         1,
         'test',
@@ -118,7 +121,7 @@ sub renew {
 
     }
     else {
-#handle stuff here
+        #handle stuff here
     }
 }
 1;

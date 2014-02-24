@@ -29,6 +29,32 @@ sub handle {
         my ($user_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'UserIdentifierValue' );
+        my $xpc = XML::LibXML::XPathContext->new;
+        $xpc->registerNs( 'ns', $self->namespace() );
+        unless ($user_id) {
+
+            # We may get a password, username combo instead of userid
+            # Need to deal with that also
+            my $root = $xmldoc->documentElement();
+            my @authtypes =
+              $xpc->findnodes( '//ns:AuthenticationInput', $root );
+            my $barcode;
+            my $pin;
+            foreach my $node (@authtypes) {
+                my $class =
+                  $xpc->findnodes( './ns:AuthenticationInputType', $node );
+                my $value =
+                  $xpc->findnodes( './ns:AuthenticationInputData', $node );
+                if ( $class->[0]->textContent eq 'Barcode Id' ) {
+                    $barcode = $value->[0]->textContent;
+                }
+                elsif ( $class->[0]->textContent eq 'PIN' ) {
+                    $pin = $value->[0]->textContent;
+                }
+
+            }
+            $user_id = $barcode;
+        }
 
         # We may get a password, username combo instead of userid
         # Need to deal with that also
@@ -39,9 +65,17 @@ sub handle {
 
         # if we have blank user, we need to return that
         # and can skip looking for elementtypes
+        if ( $user->userdata->{'borrowernumber'} eq '' ) {
+            my $vars;
+            $vars->{'messagetype'} = 'LookupUser';
+            $vars->{'error_detail'} = "Borrower not found";
+            my $output = $self->render_output( 'problem.tt', $vars );
+            return $output;
+        }
 
-        my $root     = $xmldoc->documentElement();
-        my @elements = $root->findnodes('LookupUser/UserElementType/Value');
+        my $root = $xmldoc->documentElement();
+        my @elements =
+          $xpc->findnodes( 'ns:LookupUser/UserElementType/Value', $root );
 
         #set up the variables for our template
         my $vars;

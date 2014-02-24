@@ -57,7 +57,7 @@ sub process_request {
 
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
-        warn "We can't find request type";
+#        warn "We can't find request type";
         my $output = $self->_error("We can't find request type");
         return $output;
     }
@@ -90,7 +90,7 @@ sub handle_initiation {
         if ( $strict_validation && !$self->validate($dom) ) {
 
             # we want strict validation, bail out if dom doesnt validate
-            warn " Not valid xml";
+#            warn " Not valid xml";
 
             # throw/log error
             return;
@@ -137,8 +137,8 @@ sub parse_request {
       $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
     if ($nodes) {
         my @childnodes = $nodes->[0]->childNodes();
-        if ( $childnodes[0] ) {
-            return $childnodes[0]->localname();
+        if ( $childnodes[1] ) {
+            return $childnodes[1]->localname();
         }
         else {
             warn "Got a node, but no child node";

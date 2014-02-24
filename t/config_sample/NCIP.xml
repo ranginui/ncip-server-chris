@@ -34,6 +34,6 @@
   </version>
 
   <ils value='Koha' />
-  <namespace value= '' />
+  <namespace value= 'http://www.niso.org/2008/ncip' />
   <templates value= 'templates/' />
 </acsconfig>
