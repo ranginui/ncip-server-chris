@@ -26,7 +26,7 @@ use base qw(Net::Server::PreFork);
 
 =head1 NAME
   
-    NCIP::Configuration
+    NCIPServer
 
 =head1 SYNOPSIS
 

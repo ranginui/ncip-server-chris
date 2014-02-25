@@ -23,13 +23,14 @@ our @ISA = qw(NCIP::Handler);
 sub handle {
     my $self   = shift;
     my $xmldoc = shift;
+    my $item;
     if ($xmldoc) {
 
         # Given our xml document, lets find the itemid
         my ($item_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'ItemIdentifierValue' );
-        my $item = NCIP::Item->new(
+        $item = NCIP::Item->new(
             { itemid => $item_id->textContent(), ils => $self->ils } );
         my ( $itemdata, $error ) = $item->itemdata();
         if ($error) {
