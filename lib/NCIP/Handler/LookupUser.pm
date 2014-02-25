@@ -72,15 +72,12 @@ sub handle {
             my $output = $self->render_output( 'problem.tt', $vars );
             return $output;
         }
-
-        my $root = $xmldoc->documentElement();
-        my @elements =
-          $xpc->findnodes( 'ns:LookupUser/UserElementType/Value', $root );
+        my $elements = $self->get_user_elements($xmldoc);
 
         #set up the variables for our template
         my $vars;
         $vars->{'messagetype'} = 'LookupUserResponse';
-        $vars->{'elements'}    = \@elements;
+        $vars->{'elements'}    = $elements;
         $vars->{'user'}        = $user;
         my $output = $self->render_output( 'response.tt', $vars );
         return $output;
