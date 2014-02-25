@@ -23,6 +23,7 @@ use C4::Members qw{ GetMemberDetails };
 use C4::Circulation qw { AddReturn CanBookBeIssued AddIssue };
 use C4::Context;
 use C4::Items qw { GetItem };
+use C4::Reserves qw {CanBookBeReserved AddReserve };
 
 sub itemdata {
     my $self     = shift;
@@ -122,6 +123,20 @@ sub renew {
     }
     else {
         #handle stuff here
+    }
+}
+
+sub request {
+    my $self           = shift;
+    my $biblionumber   = shift;
+    my $borrowernumber = shift;
+    if ( CanBookBeReserved( $borrowernumber, $biblionumber ) ) {
+
+        # Add reserve here
+        return ( undef, "Requested" );
+    }
+    else {
+        return ( 1, "Book can not be requested" );
     }
 }
 1;

@@ -24,17 +24,21 @@ sub handle {
     my $xmldoc = shift;
     if ($xmldoc) {
         my $root = $xmldoc->documentElement();
+        my $xpc  = XML::LibXML::XPathContext->new;
+        $xpc->registerNs( 'ns', $self->namespace() );
+
         my $userid =
-          $root->findnodes('RequestItem/UniqueUserId/UserIdentifierValue');
+          $xpc->findnodes( 'ns:RequestItem/UniqueUserId/UserIdentifierValue',
+            $root );
         my $itemid =
-          $root->findnodes('RequestItem/UniqueItemId/ItemIdentifierValue');
-        my @elements = $root->findnodes('RequestItem/ItemElementType/Value');
+          $xpc->findnodes( 'ns:RequestItem/UniqueItemId/ItemIdentifierValue',
+            $root );
 
         # checkout the item
         my ( $error, $messages ) = $self->ils->request( $userid, $itemid );
         my $vars;
         my $output;
-        my $vars->{'barcode'}=$itemid;
+        my $vars->{'barcode'} = $itemid;
         $vars->{'messagetype'} = 'RequestItemResponse';
         if ($error) {
             $vars->{'processingerror'}        = 1;
@@ -43,7 +47,8 @@ sub handle {
             $output = $self->render_output( 'problem.tt', $vars );
         }
         else {
-            $vars->{'elements'} = \@elements;
+            my $elements = $self->get_user_elements($xmldoc);
+            $vars->{'elements'} = $elements;
 
             $output = $self->render_output( 'response.tt', $vars );
         }
