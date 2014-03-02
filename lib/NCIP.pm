@@ -157,6 +157,7 @@ sub _error {
     my $error_detail = shift;
     my $vars;
     $vars->{'error_detail'} = $error_detail;
+    $vars->{'messagetype'} = 'ItemRequestedResponse'; # No idea what this type should be 
     my $template = Template->new(
         { INCLUDE_PATH => $self->config->('NCIP.templates.value'), } );
     my $output;
