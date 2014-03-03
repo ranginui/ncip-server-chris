@@ -55,19 +55,21 @@ sub handle {
             }
             $user_id = $barcode;
         }
+        else {
+            $user_id = $user_id->textContent();
+        }
 
         # We may get a password, username combo instead of userid
         # Need to deal with that also
 
-        my $user = NCIP::User->new(
-            { userid => $user_id->textContent(), ils => $self->ils } );
+        my $user = NCIP::User->new( { userid => $user_id, ils => $self->ils } );
         $user->initialise();
 
         # if we have blank user, we need to return that
         # and can skip looking for elementtypes
         if ( $user->userdata->{'borrowernumber'} eq '' ) {
             my $vars;
-            $vars->{'messagetype'} = 'LookupUser';
+            $vars->{'messagetype'}  = 'LookupUserResponse';
             $vars->{'error_detail'} = "Borrower not found";
             my $output = $self->render_output( 'problem.tt', $vars );
             return $output;
