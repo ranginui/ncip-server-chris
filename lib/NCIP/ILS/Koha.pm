@@ -53,14 +53,14 @@ sub userdata {
 
 sub userenv {
     my $self    = shift;
-    my $branch = shift || 'AS';
+    my $branch  = shift || 'AS';
     my @USERENV = (
         1,
         'test',
         'MASTERTEST',
         'Test',
         'Test',
-         $branch,    #branchcode need to set this properly
+        $branch,    #branchcode need to set this properly
         'Auckland',
         0,
     );
@@ -77,7 +77,11 @@ sub checkin {
     my $exemptfine = undef;
     my $dropbox    = undef;
     $self->userenv();
-    my ( $success, $messages, $issue, $borrower ) =
+    unless ($branch) {
+        my $item = GetItem( undef, $barcode );
+        $branch = $item->{holdingbranch};
+    }
+    ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branch, $exemptfine, $dropbox );
     my $result = {
         success         => $success,
@@ -94,10 +98,11 @@ sub checkout {
     my $userid   = shift;
     my $barcode  = shift;
     my $borrower = GetMemberDetails( undef, $userid );
-    my $item = GetItem( undef, $barcode);
+    my $item     = GetItem( undef, $barcode );
     my $error;
     my $confirm;
-    $self->userenv($item->{holdingbranch});
+    $self->userenv( $item->{holdingbranch} );
+
     if ($borrower) {
 
         ( $error, $confirm ) = CanBookBeIssued( $borrower, $barcode );
@@ -146,7 +151,6 @@ sub request {
     my $barcode      = shift;
     my $biblionumber = shift;
     my $borrower     = GetMemberDetails( undef, $cardnumber );
-    warn $cardnumber;
     my $result;
     unless ($borrower) {
         $result = { success => 0, messages => { 'BORROWER_NOT_FOUND' => 1 } };
@@ -164,7 +168,6 @@ sub request {
         return $result;
     }
     $self->userenv();
-    warn  $borrower->{borrowernumber};
     if (
         CanBookBeReserved(
             $borrower->{borrowernumber},
@@ -174,7 +177,7 @@ sub request {
     {
         my $biblioitemnumber = $itemdata->{biblionumber};
         my $branchcode       = 'CALG';
-        warn  $borrower->{borrwerborrowernumber};
+
         # Add reserve here
         AddReserve(
             $branchcode,               $borrower->{borrowernumber},
@@ -185,24 +188,21 @@ sub request {
             $itemdata->{'itemnumber'} || undef, undef
         );
         my $request_id;
-        if ($biblionumber){
-          warn "yo $biblionumber";
-         my $reserves = GetReservesFromBiblionumber({biblionumber => $itemdata->{biblionumber}});
-            use Data::Dumper;
-            warn Dumper $reserves;
-            $request_id=$reserves->[1]->{reserve_id};
+        if ($biblionumber) {
+            my $reserves = GetReservesFromBiblionumber(
+                { biblionumber => $itemdata->{biblionumber} } );
+            $request_id = $reserves->[1]->{reserve_id};
         }
         else {
-        my ( $reservedate, $borrowernumber, $branchcode2, $reserve_id, $wait ) =
-          GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
-          $request_id = $reserve_id;
+            my ( $reservedate, $borrowernumber, $branchcode2, $reserve_id,
+                $wait )
+              = GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
+            $request_id = $reserve_id;
         }
-        warn $request_id;
         $result = {
             success  => 1,
             messages => { request_id => $request_id }
         };
-        warn 
         return $result;
     }
     else {
@@ -275,7 +275,7 @@ sub acceptitem {
           GetMarcFromKohaField( "items.barcode", '' );
         my ( $nextnum, $scr ) =
           C4::Barcodes::ValueBuilder::incremental::get_barcode( \%args );
-          $nextnum=sprintf("%.0f",$nextnum);
+        $nextnum = sprintf( "%.0f", $nextnum );
         my $item = { 'barcode' => $nextnum };
         ( $biblionumber, $biblioitemnumber, $itemnumber ) =
           AddItem( $item, $biblionumber );
@@ -292,7 +292,7 @@ sub acceptitem {
     if ( $action =~ /^Hold For Pickup And Notify/ ) {
         unless ($reserve_id) {
             $branchcode = 'CALG';    # set this properly
-                                   # no reserve, place one
+                                     # no reserve, place one
             if ($user) {
                 my $borrower = GetMemberDetails( undef, $user );
                 if ($borrower) {
