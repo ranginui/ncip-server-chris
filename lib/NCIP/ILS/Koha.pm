@@ -62,11 +62,11 @@ sub userenv {
         'Test',
         $branch,    #branchcode need to set this properly
         'Auckland',
-        0,
+        1,
     );
 
     C4::Context->_new_userenv('DUMMY_SESSION_ID');
-    C4::Context->set_userenv(@USERENV);
+    C4::Context::set_userenv(@USERENV);
     return;
 }
 
