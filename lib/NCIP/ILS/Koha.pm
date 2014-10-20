@@ -81,7 +81,7 @@ sub checkin {
         my $item = GetItem( undef, $barcode );
         $branch = $item->{holdingbranch};
     }
-    ( $success, $messages, $issue, $borrower ) =
+    my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branch, $exemptfine, $dropbox );
     my $result = {
         success         => $success,
@@ -150,8 +150,11 @@ sub request {
     my $cardnumber   = shift;
     my $barcode      = shift;
     my $biblionumber = shift;
+    my $type         = shift;
+    my $branchcode   = shift;
     my $borrower     = GetMemberDetails( undef, $cardnumber );
     my $result;
+
     unless ($borrower) {
         $result = { success => 0, messages => { 'BORROWER_NOT_FOUND' => 1 } };
         return $result;
@@ -161,7 +164,13 @@ sub request {
         $itemdata = GetItem( undef, $barcode );
     }
     else {
-        $itemdata = GetBiblioData($biblionumber);
+        if ( $type eq 'SYSNUMBER' ) {
+            $itemdata = GetBiblioData($biblionumber);
+        }
+        elsif ( $type eq 'ISBN' ) {
+
+            #deal with this
+        }
     }
     unless ($itemdata) {
         $result = { success => 0, messages => {'ITEM_NOT_FOUND'} };
@@ -176,7 +185,6 @@ sub request {
       )
     {
         my $biblioitemnumber = $itemdata->{biblionumber};
-        my $branchcode       = 'CALG';
 
         # Add reserve here
         AddReserve(
@@ -227,7 +235,8 @@ sub acceptitem {
     my $user    = shift;
     my $action  = shift;
     my $create  = shift;
-    my $iteminfo = shift;
+    my $iteminfo   = shift;
+    my $branchcode = shift;
     my $result;
 
     $self->userenv();    # set userenvironment
@@ -276,7 +285,11 @@ sub acceptitem {
         my ( $nextnum, $scr ) =
           C4::Barcodes::ValueBuilder::incremental::get_barcode( \%args );
         $nextnum = sprintf( "%.0f", $nextnum );
-        my $item = { 'barcode' => $nextnum };
+        my $item = {
+            'barcode'       => $nextnum,
+            'holdingbranch' => $branchcode,
+            'homebranch'    => $branchchode
+        };
         ( $biblionumber, $biblioitemnumber, $itemnumber ) =
           AddItem( $item, $biblionumber );
         $barcode = $nextnum;
@@ -285,14 +298,14 @@ sub acceptitem {
     # find hold and get branch for that, check in there
     my $itemdata = GetItem( undef, $barcode );
 
-    my ( $reservedate, $borrowernumber, $branchcode, $reserve_id, $wait ) =
+    my ( $reservedate, $borrowernumber, $branchcode2, $reserve_id, $wait ) =
       GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
 
     # now we have to check the requested action
     if ( $action =~ /^Hold For Pickup And Notify/ ) {
         unless ($reserve_id) {
-            $branchcode = 'CALG';    # set this properly
-                                     # no reserve, place one
+
+            # no reserve, place one
             if ($user) {
                 my $borrower = GetMemberDetails( undef, $user );
                 if ($borrower) {
