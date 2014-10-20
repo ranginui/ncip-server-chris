@@ -217,7 +217,7 @@ sub cancelrequest {
     my $requestid = shift;
     CancelReserve( { reserve_id => $requestid } );
 
-    my $result = { success => 1 };
+    my $result = { success => 1, messages => { request_id => $requestid } };
     return $result;
 }
 
