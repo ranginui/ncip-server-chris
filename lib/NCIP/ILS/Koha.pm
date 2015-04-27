@@ -237,6 +237,7 @@ sub acceptitem {
     my $create  = shift;
     my $iteminfo   = shift;
     my $branchcode = shift;
+    $branchcode =~ s/^\s+|\s+$//g;
     my $result;
 
     $self->userenv();    # set userenvironment
