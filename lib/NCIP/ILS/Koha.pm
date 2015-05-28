@@ -279,7 +279,7 @@ sub acceptitem {
         ( $biblionumber, $biblioitemnumber ) =
           AddBiblio( $record, $frameworkcode );
         my $itemnumber;
-        my $barcode = 'ILL' . $biblionumber . time;
+        $barcode = 'ILL' . $biblionumber . time unless $barcode;
         my $item = {
             'barcode'       => $barcode,
             'holdingbranch' => $branchcode,
