@@ -154,7 +154,7 @@ sub request {
     my $branchcode   = shift;
     my $borrower     = GetMemberDetails( undef, $cardnumber );
     my $result;
-
+    $branchcode =~ s/^\s+|\s+$//g;
     unless ($borrower) {
         $result = { success => 0, messages => { 'BORROWER_NOT_FOUND' => 1 } };
         return $result;
@@ -199,7 +199,7 @@ sub request {
         if ($biblionumber) {
             my $reserves = GetReservesFromBiblionumber(
                 { biblionumber => $itemdata->{biblionumber} } );
-            $request_id = $reserves->[1]->{reserve_id};
+            $request_id = $reserves->[-1]->{reserve_id};
         }
         else {
             my ( $reservedate, $borrowernumber, $branchcode2, $reserve_id,
