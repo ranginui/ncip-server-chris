@@ -116,7 +116,9 @@ sub checkout {
             return ( 1, $confirm );
         }
         else {
-            my $datedue = AddIssue( $borrower, $barcode );
+            my $issue = AddIssue( $borrower, $barcode );
+            my $datedue = $issue->date_due();
+            $datedue =~ s/ /T/;
             return ( 0, undef, $datedue );    #successfully issued
         }
     }
@@ -155,6 +157,7 @@ sub request {
     my $borrower     = GetMemberDetails( undef, $cardnumber );
     my $result;
     $branchcode =~ s/^\s+|\s+$//g;
+
     unless ($borrower) {
         $result = { success => 0, messages => { 'BORROWER_NOT_FOUND' => 1 } };
         return $result;
