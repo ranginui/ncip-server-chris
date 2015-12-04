@@ -55,11 +55,11 @@ sub userenv {
     my $self    = shift;
     my $branch  = shift || 'AS';
     my @USERENV = (
-        1,
-        'test',
-        'MASTERTEST',
-        'Test',
-        'Test',
+        312,
+        'NCIP',
+        '24535000002009',
+        'NCIP',
+        'User',
         $branch,    #branchcode need to set this properly
         'Auckland',
         1,
