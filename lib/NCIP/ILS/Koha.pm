@@ -246,6 +246,7 @@ sub acceptitem {
     my $iteminfo   = shift;
     my $branchcode = shift;
     $branchcode =~ s/^\s+|\s+$//g;
+    $branchcode = "$branchcode"; # Convert XML::LibXML::NodeList to string
     my $result;
 
     $self->userenv();    # set userenvironment
@@ -310,12 +311,11 @@ sub acceptitem {
             # no reserve, place one
             if ($user) {
                 my $borrower = GetMemberDetails( undef, $user );
-                if ($borrower) {
+                if ($borrower) { 
                     AddReserve(
                         $branchcode,
                         $borrower->{'borrowernumber'},
-                        $biblionumber,
-                        'a',
+                        $itemdata->{biblionumber},
                         [$biblioitemnumber],
                         1,
                         undef,
@@ -346,8 +346,10 @@ sub acceptitem {
             return $result;
         }
     }
+
     my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branchcode, undef, undef );
+
     if ( $messages->{'NotIssued'} ) {
         $success = 1
           ; # we do this because we are only doing the return to trigger the reserve
