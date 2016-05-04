@@ -45,5 +45,19 @@ RequestedItem
       </PersonalNameInformation>
     </NameInformation>
   [% END %]
+  [% IF element.textContent == 'Name Information' %]
+    <UserPrivilege>
+      <AgencyUserPrivilegeType>LIBRARY</AgencyUserPrivilegeType>
+      <UserPrivilegeStatusType>[% user.userdata.branchcode %]</UserPrivilegeStatusType>
+    </UserPrivilege>
+    <UserPrivilege>
+      <AgencyUserPrivilegeType>PROFILE</AgencyUserPrivilegeType>
+      <UserPrivilegeStatusType>[% user.userdata.categorycode %]</UserPrivilegeStatusType>
+    </UserPrivilege>
+    <UserPrivilege>
+      <AgencyUserPrivilegeType>STATUS</AgencyUserPrivilegeType>
+      <UserPrivilegeStatusType>[% IF user.userdata.restricted < 0 %]Delinquent[% ELSIF user.userdata.restricted > 0 %]Restricted[% ELSE %]Ok[% END %]</UserPrivilegeStatusType>
+    </UserPrivilege>
+  [% END %]
 [% END %]
 </UserOptionalFields>

@@ -22,7 +22,7 @@ use Object::Tiny qw{ name };
 use MARC::Record;
 use MARC::Field;
 
-use C4::Members qw{ GetMemberDetails };
+use C4::Members qw{ GetMemberDetails IsMemberBlocked };
 use C4::Circulation qw { AddReturn CanBookBeIssued AddIssue };
 use C4::Context;
 use C4::Items qw { GetItem };
@@ -48,6 +48,10 @@ sub userdata {
     my $self     = shift;
     my $userid   = shift;
     my $userdata = GetMemberDetails( undef, $userid );
+
+    my ( $block_status, $count ) = IsMemberBlocked( $userdata->{borrowernumber} );
+    $userdata->{restricted} = $block_status;
+
     return $userdata;
 }
 
@@ -77,12 +81,16 @@ sub checkin {
     my $exemptfine = undef;
     my $dropbox    = undef;
     $self->userenv();
+
     unless ($branch) {
         my $item = GetItem( undef, $barcode );
         $branch = $item->{holdingbranch};
     }
+
     my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branch, $exemptfine, $dropbox );
+
+    $success ||= 1 if $messages->{LocalUse};
     my $result = {
         success         => $success,
         messages        => $messages,
