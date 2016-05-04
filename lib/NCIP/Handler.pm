@@ -131,9 +131,9 @@ sub render_output {
             INCLUDE_PATH => $self->templates,
             POST_CHOMP   => 1
         }
-    );
+    ) || die Template->error();
     my $output;
-    $template->process( $templatename, $vars, \$output );
+    $template->process( $templatename, $vars, \$output ) || die $template->error();
     return $output;
 }
 1;

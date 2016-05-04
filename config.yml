@@ -5,7 +5,7 @@
 # Your application's name
 appname: "NCIP::Dancing"
 
-views: "/home/koha/NCIPServer/templates/"
+views: "/home/load20/ncip-server/templates/"
 
 # The default layout to use for your application (located in
 # views/layouts/main.tt)

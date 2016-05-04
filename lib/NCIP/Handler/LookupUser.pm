@@ -74,18 +74,22 @@ sub handle {
         $vars->{'fromagency'} = $to;
         $vars->{'toagency'} = $from;
 
+        $vars->{'messagetype'} = 'LookupUserResponse';
+
         # if we have blank user, we need to return that
         # and can skip looking for elementtypes
-        if ( $user->userdata->{'borrowernumber'} eq '' ) {
-            $vars->{'messagetype'}  = 'LookupUserResponse';
-            $vars->{'error_detail'} = "Borrower not found";
+        unless ( $user->userdata->{'borrowernumber'} ) {
+            $vars->{'processingerror'}        = 1;
+            $vars->{'processingerrortype'}    = 'LookupUserResponse';
+            $vars->{'processingerrorelement'} = 'UserIdentifierValue';
+            $vars->{'error_detail'} = 'No borrower with matching cardnumber found';
+            $vars->{'processing_error_value'} = $user_id;
             my $output = $self->render_output( 'problem.tt', $vars );
             return $output;
         }
         my $elements = $self->get_user_elements($xmldoc);
 
         #set up the variables for our template
-        $vars->{'messagetype'} = 'LookupUserResponse';
         $vars->{'elements'}    = $elements;
         $vars->{'user'}        = $user;
         my $output = $self->render_output( 'response.tt', $vars );
