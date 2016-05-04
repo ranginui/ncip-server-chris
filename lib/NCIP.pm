@@ -4,6 +4,7 @@ use NCIP::Handler;
 use Modern::Perl;
 use XML::LibXML;
 use Try::Tiny;
+use XML::Tidy::Tiny qw{ xml_tidy };
 use Module::Load;
 use Template;
 use Log::Log4perl;
@@ -70,7 +71,7 @@ sub process_request {
             template_dir => $self->config->('NCIP.templates.value'),
         }
     );
-    return $handler->handle( $self->xmldoc );
+    return xml_tidy( $handler->handle( $self->xmldoc ) );
 }
 
 =head2 handle_initiation
