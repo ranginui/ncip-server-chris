@@ -36,7 +36,9 @@ use C4::Items qw{AddItem};
 sub itemdata {
     my $self     = shift;
     my $barcode  = shift;
+
     my $itemdata = GetItem( undef, $barcode );
+
     if ($itemdata) {
         return ( $itemdata, undef );
     }

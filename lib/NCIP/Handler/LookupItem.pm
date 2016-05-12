@@ -23,27 +23,51 @@ our @ISA = qw(NCIP::Handler);
 sub handle {
     my $self   = shift;
     my $xmldoc = shift;
-    my $item;
-    if ($xmldoc) {
 
-        # Given our xml document, lets find the itemid
+    if ($xmldoc) {
         my ($item_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'ItemIdentifierValue' );
-        $item = NCIP::Item->new(
-            { itemid => $item_id->textContent(), ils => $self->ils } );
-        my ( $itemdata, $error ) = $item->itemdata();
-        if ($error) {
+        $item_id = $item_id->textContent();
 
-            # handle error here
+        my $item = NCIP::Item->new(
+            {
+                itemid => $item_id,
+                ils    => $self->ils,
+            }
+        );
+
+        my ( $item_data, $error ) = $item->itemdata();
+
+        if ($error) {
+            if ($error) {
+                my $output = $self->render_output(
+                    'problem.tt',
+                    {
+                        processingerror        => 1,
+                        processingerrortype    => 'BadBarcode',
+                        messagetype            => 'LookupItemResponse',
+                        processingerrorelement => 'ItemIdentifierValue',
+                        processing_error_value => $item_id,
+                        error_detail => 'No item with matching barcode found',
+
+                    }
+                );
+                return $output;
+            }
+
         }
-        warn $item->itemid();
+
+        my $output = $self->render_output(
+            'response.tt',
+            {
+                messagetype => 'LookupItemResponse',
+                item        => $item_data,
+            }
+        );
+
+        return $output;
     }
-    my $vars;
-    $vars->{'messagetype'} = 'LookupItemResponse';
-    $vars->{'item'}        = $item;
-    my $output = $self->render_output( 'response.tt', $vars );
-    return $output;
 }
 
 1;
