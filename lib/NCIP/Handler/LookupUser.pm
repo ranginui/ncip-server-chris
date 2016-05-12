@@ -29,7 +29,9 @@ sub handle {
         my ($user_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'UserIdentifierValue' );
+
         my $xpc = $self->xpc();
+
         unless ($user_id) {
 
             # We may get a password, username combo instead of userid
@@ -37,8 +39,10 @@ sub handle {
             my $root = $xmldoc->documentElement();
             my @authtypes =
               $xpc->findnodes( '//ns:AuthenticationInput', $root );
+
             my $barcode;
-            my $pin;
+            my $pin; #FIXME: we do nothing with pin authentication
+
             foreach my $node (@authtypes) {
                 my $class =
                   $xpc->findnodes( './ns:AuthenticationInputType', $node );
@@ -52,6 +56,7 @@ sub handle {
                 }
 
             }
+
             $user_id = $barcode;
         }
         else {
