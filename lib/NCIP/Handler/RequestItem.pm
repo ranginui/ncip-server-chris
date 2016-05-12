@@ -40,10 +40,13 @@ sub handle {
         my $biblionumber = $biblio_id->textContent() if $biblio_id;
         my $type = 'SYSNUMBER';
         $type = $biblio_type->textContent() if $biblio_type;
-        my ($from,$to) = $self->get_agencies($xmldoc);
+        my ( $from, $to ) = $self->get_agencies($xmldoc);
         my $branchcode = $to->[0]->textContent() if $to;
+
         # request the item
-        my $result = $self->ils->request( $userid, $itemid, $biblionumber, $type, $branchcode );
+        my $result =
+          $self->ils->request( $userid, $itemid, $biblionumber, $type,
+            $branchcode );
         my $vars;
         my $output;
         $vars->{'barcode'}     = $itemid;

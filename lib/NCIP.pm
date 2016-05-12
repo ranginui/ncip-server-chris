@@ -35,7 +35,8 @@ sub new {
     my $config     = NCIP::Configuration->new($config_dir);
     $self->{config}    = $config;
     $self->{namespace} = $config->('NCIP.namespace.value');
-    Log::Log4perl->init($config_dir . "/log4perl.conf");
+    Log::Log4perl->init( $config_dir . "/log4perl.conf" );
+
     # load the ILS dependent module
     my $module = 'NCIP::ILS::' . $config->('NCIP.ils.value');
     load $module || die "Can not load ILS module $module";
@@ -59,7 +60,7 @@ sub process_request {
 
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
-#        warn "We can't find request type";
+      #        warn "We can't find request type";
         my $output = $self->_error("We can't find request type");
         return $output;
     }
@@ -85,7 +86,7 @@ sub handle_initiation {
     my $log = Log::Log4perl->get_logger("NCIP");
     eval { $dom = XML::LibXML->load_xml( string => $xml ); };
     if ($@) {
-        $log->info("Invalid xml we can not parse it ");        
+        $log->info("Invalid xml we can not parse it ");
     }
     if ($dom) {
 
@@ -93,7 +94,7 @@ sub handle_initiation {
         if ( $strict_validation && !$self->validate($dom) ) {
 
             # we want strict validation, bail out if dom doesnt validate
-#            warn " Not valid xml";
+            #            warn " Not valid xml";
 
             # throw/log error
             return;
@@ -160,7 +161,8 @@ sub _error {
     my $error_detail = shift;
     my $vars;
     $vars->{'error_detail'} = $error_detail;
-    $vars->{'messagetype'} = 'ItemRequestedResponse'; # No idea what this type should be 
+    $vars->{'messagetype'} =
+      'ItemRequestedResponse';    # No idea what this type should be
     my $template = Template->new(
         { INCLUDE_PATH => $self->config->('NCIP.templates.value'), } );
     my $output;

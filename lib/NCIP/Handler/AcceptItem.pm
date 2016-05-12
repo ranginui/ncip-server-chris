@@ -31,11 +31,11 @@ sub handle {
         my $requestagency = $xpc->find( 'ns:AgencyId', $request );
         my $requestid  = $xpc->find( '//ns:RequestIdentifierValue', $request );
         my $borrowerid = $xpc->find( '//ns:UserIdentifierValue',    $root );
-        
+
         if ($action) {
             $action = $action->textContent();
         }
-        
+
         my $iteminfo = $xpc->find( '//ns:ItemOptionalFields', $root );
         my $itemdata = {};
 
@@ -72,7 +72,7 @@ sub handle {
         my $create = 0;
         my ( $from, $to ) = $self->get_agencies($xmldoc);
 
-        # Autographics workflow is for an accept item to create the item then do what is in $action
+# Autographics workflow is for an accept item to create the item then do what is in $action
         if ( $from && $from->[0]->textContent() =~ /CPomAG/ ) {
             $create = 1;
         }
@@ -80,13 +80,13 @@ sub handle {
         my $pickup_location;
         if ( $to && $to->[0] ) {
             $pickup_location = $to->[0]->textContent();
-        } else {
+        }
+        else {
             $pickup_location = $xpc->find( '//ns:PickupLocation', $root );
         }
 
-        my $accepted =
-          $self->ils->acceptitem( $itemid->[0]->textContent(), $borrowerid, $action, $create,
-            $itemdata, $pickup_location );
+        my $accepted = $self->ils->acceptitem( $itemid->[0]->textContent(),
+            $borrowerid, $action, $create, $itemdata, $pickup_location );
         my $output;
         my $vars;
 
@@ -107,9 +107,9 @@ sub handle {
             my $elements = $self->get_user_elements($xmldoc);
             $vars->{'requestagency'} = $requestagency;
             $vars->{'requestid'}     = $requestid;
-            $vars->{'newbarcode'}   = $accepted->{'newbarcode'} || $itemid;
-            $vars->{'elements'} = $elements;
-            $vars->{'accept'}   = $accepted;
+            $vars->{'newbarcode'}    = $accepted->{'newbarcode'} || $itemid;
+            $vars->{'elements'}      = $elements;
+            $vars->{'accept'}        = $accepted;
             $output = $self->render_output( 'response.tt', $vars );
         }
         return $output;

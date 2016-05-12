@@ -34,16 +34,16 @@ use NCIP::Const;
 our @ISA = qw(NCIP::Handler);
 
 sub handle {
-    my $self = shift;
+    my $self   = shift;
     my $xmldoc = shift;
     if ($xmldoc) {
         my $vars;
-        my ($from,$to) = $self->get_agencies($xmldoc);
-        $vars->{'fromagency'} = $to;
-        $vars->{'toagency'} = $from;
+        my ( $from, $to ) = $self->get_agencies($xmldoc);
+        $vars->{'fromagency'}  = $to;
+        $vars->{'toagency'}    = $from;
         $vars->{'messagetype'} = 'LookupVersionResponse';
-        $vars->{'versions'} = [ NCIP::Const::SUPPORTED_VERSIONS ];
-        my $output = $self->render_output('response.tt', $vars);
+        $vars->{'versions'}    = [NCIP::Const::SUPPORTED_VERSIONS];
+        my $output = $self->render_output( 'response.tt', $vars );
         return $output;
     }
 }

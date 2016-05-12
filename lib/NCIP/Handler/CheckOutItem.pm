@@ -26,9 +26,9 @@ sub handle {
         my $root = $xmldoc->documentElement();
         my $xpc  = $self->xpc();
 
-        my $userid = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
-        my $itemid = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
-        my $date_due = $xpc->findnodes( '//ns:DesiredDateDue', $root );
+        my $userid   = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
+        my $itemid   = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+        my $date_due = $xpc->findnodes( '//ns:DesiredDateDue',      $root );
 
         # checkout the item
         my ( $error, $messages, $datedue ) =

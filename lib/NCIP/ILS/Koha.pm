@@ -34,8 +34,8 @@ use C4::Barcodes::ValueBuilder;
 use C4::Items qw{AddItem};
 
 sub itemdata {
-    my $self     = shift;
-    my $barcode  = shift;
+    my $self    = shift;
+    my $barcode = shift;
 
     my $itemdata = GetItem( undef, $barcode );
 
@@ -52,7 +52,8 @@ sub userdata {
     my $userid   = shift;
     my $userdata = GetMemberDetails( undef, $userid );
 
-    my ( $block_status, $count ) = IsMemberBlocked( $userdata->{borrowernumber} );
+    my ( $block_status, $count ) =
+      IsMemberBlocked( $userdata->{borrowernumber} );
     $userdata->{restricted} = $block_status;
 
     return $userdata;
@@ -111,7 +112,7 @@ sub checkout {
     my $date_due = shift;
 
     my $borrower = GetMemberDetails( undef, $userid );
-    my $item     = GetItem( undef, $barcode );
+    my $item = GetItem( undef, $barcode );
 
     my $error;
     my $confirm;
@@ -120,9 +121,11 @@ sub checkout {
 
     if ($borrower) {
 
-        ( $error, $confirm ) = CanBookBeIssued( $borrower, $barcode, $date_due );
+        ( $error, $confirm ) =
+          CanBookBeIssued( $borrower, $barcode, $date_due );
 
         if (%$error) {
+
             # Can't issue item, return error hash
             return ( 1, $error );
         }
@@ -260,10 +263,10 @@ sub acceptitem {
     my $iteminfo   = shift;
     my $branchcode = shift;
     $branchcode =~ s/^\s+|\s+$//g;
-    $branchcode = "$branchcode"; # Convert XML::LibXML::NodeList to string
+    $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
     my $result;
 
-    $self->userenv();    # set userenvironment
+    $self->userenv();               # set userenvironment
     my ( $biblionumber, $biblioitemnumber );
     if ($create) {
         my $record;
@@ -325,7 +328,7 @@ sub acceptitem {
             # no reserve, place one
             if ($user) {
                 my $borrower = GetMemberDetails( undef, $user );
-                if ($borrower) { 
+                if ($borrower) {
                     AddReserve(
                         $branchcode,
                         $borrower->{'borrowernumber'},

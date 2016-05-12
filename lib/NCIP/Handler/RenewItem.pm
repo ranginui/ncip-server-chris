@@ -29,14 +29,14 @@ sub handle {
         my @elements = $root->findnodes('RenewItem/ItemElementType/Value');
 
         # checkin the item
-        my $renewed = $self->ils->renew( $itemid );
+        my $renewed = $self->ils->renew($itemid);
         my $output;
         my $vars;
         $vars->{'messagetype'} = 'RenewItemResponse';
-        $vars->{'barcode'} = $itemid;
+        $vars->{'barcode'}     = $itemid;
         if ( !$renewed->{success} ) {
-            $vars->{'processingerror'} = 1;
-            $vars->{'processingerrortype'} = $renewed->{'messages'};
+            $vars->{'processingerror'}        = 1;
+            $vars->{'processingerrortype'}    = $renewed->{'messages'};
             $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
             $output = $self->render_output( 'problem.tt', $vars );
         }

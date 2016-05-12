@@ -133,7 +133,8 @@ sub render_output {
         }
     ) || die Template->error();
     my $output;
-    $template->process( $templatename, $vars, \$output ) || die $template->error();
+    $template->process( $templatename, $vars, \$output )
+      || die $template->error();
     return $output;
 }
 1;

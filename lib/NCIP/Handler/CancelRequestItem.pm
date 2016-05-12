@@ -32,6 +32,7 @@ sub handle {
         my $vars;
         my $output;
         $vars->{'messagetype'} = 'CancelRequestItemResponse';
+
         if ( !$result->{'success'} ) {
             $vars->{'processingerror'}        = 1;
             $vars->{'processingerrortype'}    = $result->{'messages'};
