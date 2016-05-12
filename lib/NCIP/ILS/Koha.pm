@@ -21,7 +21,6 @@ use Object::Tiny qw{ name };
 
 use MARC::Record;
 use MARC::Field;
-use Data::Dumper;
 
 use C4::Members qw{ GetMemberDetails IsMemberBlocked };
 use C4::Circulation qw { AddReturn CanBookBeIssued AddIssue };
@@ -171,19 +170,22 @@ sub request {
     my $biblionumber = shift;
     my $type         = shift;
     my $branchcode   = shift;
-    my $borrower     = GetMemberDetails( undef, $cardnumber );
-    my $result;
-    $branchcode =~ s/^\s+|\s+$//g;
 
-    unless ($branchcode) {
-        $result = { success => 0, messages => { 'BRANCH_NOT_FOUND' => 1 } };
-        return $result;
-    }
+    my $borrower = GetMemberDetails( undef, $cardnumber );
 
     unless ($borrower) {
-        $result = { success => 0, messages => { 'BORROWER_NOT_FOUND' => 1 } };
-        return $result;
+        return { success => 0, messages => { 'BORROWER_NOT_FOUND' => 1 } };
     }
+
+    #FIXME: Maybe this should be configurable?
+    # If no branch is given, fall back to patron home library
+    $branchcode ||= q{};
+    $branchcode =~ s/^\s+|\s+$//g;
+    $branchcode ||= $borrower->{branchcode};
+    unless ($branchcode) {
+        return { success => 0, messages => { 'BRANCH_NOT_FOUND' => 1 } };
+    }
+
     my $itemdata;
     if ($barcode) {
         $itemdata = GetItem( undef, $barcode );
@@ -195,13 +197,16 @@ sub request {
         elsif ( $type eq 'ISBN' ) {
 
             #deal with this
+            die("Request by ISBN not yet implemented");
         }
     }
+
     unless ($itemdata) {
-        $result = { success => 0, messages => {'ITEM_NOT_FOUND'} };
-        return $result;
+        return { success => 0, messages => {'ITEM_NOT_FOUND'} };
     }
+
     $self->userenv();
+
     if (
         CanBookBeReserved(
             $borrower->{borrowernumber},
@@ -212,46 +217,55 @@ sub request {
         my $biblioitemnumber = $itemdata->{biblionumber};
 
         # Add reserve here
-        AddReserve(
-            $branchcode,               $borrower->{borrowernumber},
-            $itemdata->{biblionumber}, 'a',
-            [$biblioitemnumber],       1,
-            undef,                     undef,
-            'Placed By ILL',           '',
-            $itemdata->{'itemnumber'} || undef, undef
+        my $request_id = AddReserve(
+            $branchcode, $borrower->{borrowernumber},
+            $itemdata->{biblionumber}, [$biblioitemnumber],
+            1,     undef,
+            undef, 'Placed By ILL',
+            '',    $itemdata->{'itemnumber'} || undef,
+            undef
         );
-        my $request_id;
-        if ($biblionumber) {
-            my $reserves = GetReservesFromBiblionumber(
-                { biblionumber => $itemdata->{biblionumber} } );
-            $request_id = $reserves->[-1]->{reserve_id};
+
+        if ($request_id) {
+            return {
+                success  => 1,
+                messages => {
+                    request_id => $request_id
+                }
+            };
         }
         else {
-            my ( $reservedate, $borrowernumber, $branchcode2, $reserve_id,
-                $wait )
-              = GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
-            $request_id = $reserve_id;
+            return {
+                success  => 0,
+                messages => {
+                    'DUPLICATE_REQUEST' => 1,
+                }
+            };
+
         }
-        $result = {
-            success  => 1,
-            messages => { request_id => $request_id }
-        };
-        return $result;
     }
     else {
-        $result = { success => 0, messages => { CANNOT_REQUEST => 1 } };
-        return $result;
-
+        return {
+            success  => 0,
+            messages => {
+                CANNOT_REQUEST => 1
+            }
+        };
     }
 }
 
 sub cancelrequest {
     my $self      = shift;
     my $requestid = shift;
+
     CancelReserve( { reserve_id => $requestid } );
 
-    my $result = { success => 1, messages => { request_id => $requestid } };
-    return $result;
+    return {
+        success  => 1,
+        messages => {
+            request_id => $requestid
+        }
+    };
 }
 
 sub acceptitem {
@@ -262,6 +276,7 @@ sub acceptitem {
     my $create  = shift;
     my $iteminfo   = shift;
     my $branchcode = shift;
+
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
     my $result;

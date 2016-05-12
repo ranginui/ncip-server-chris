@@ -35,34 +35,49 @@ sub handle {
 
         my ($biblio_id) =
           $xpc->findnodes( '//ns:BibliographicRecordIdentifier', $root );
+        my $biblionumber = $biblio_id->textContent() if $biblio_id;
+
         my ($biblio_type) =
           $xpc->findnodes( '//ns:BibliographicItemIdentifierCode', $root );
-        my $biblionumber = $biblio_id->textContent() if $biblio_id;
         my $type = 'SYSNUMBER';
         $type = $biblio_type->textContent() if $biblio_type;
+
         my ( $from, $to ) = $self->get_agencies($xmldoc);
+
         my $branchcode = $to->[0]->textContent() if $to;
 
         # request the item
         my $result =
           $self->ils->request( $userid, $itemid, $biblionumber, $type,
             $branchcode );
+
         my $vars;
         my $output;
-        $vars->{'barcode'}     = $itemid;
-        $vars->{'messagetype'} = 'RequestItemResponse';
-        if ( !$result->{'success'} ) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $result->{messages};
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+
+        if ( $result->{success} ) {
+            my $elements = $self->get_user_elements($xmldoc);
+            $output = $self->render_output(
+                'response.tt',
+                {
+                    barcode     => $itemid,
+                    messagetype => 'RequestItemResponse',
+                    elements    => $elements,
+                    messages    => $result->{messages},
+                }
+            );
         }
         else {
-            my $elements = $self->get_user_elements($xmldoc);
-            $vars->{'elements'} = $elements;
+            $output = $self->render_output(
+                'problem.tt',
+                {
+                    barcode                => $itemid,
+                    messagetype            => 'RequestItemResponse',
+                    processingerror        => 1,
+                    processingerrortype    => $result->{messages},
+                    processingerrorelement => 'UniqueItemIdentifier',
+                }
 
-            $vars->{'messages'} = $result->{messages};
-            $output = $self->render_output( 'response.tt', $vars );
+            );
         }
         return $output;
     }
