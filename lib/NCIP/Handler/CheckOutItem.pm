@@ -28,10 +28,11 @@ sub handle {
 
         my $userid = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
         my $itemid = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+        my $date_due = $xpc->findnodes( '//ns:DesiredDateDue', $root );
 
         # checkout the item
         my ( $error, $messages, $datedue ) =
-          $self->ils->checkout( $userid, $itemid );
+          $self->ils->checkout( $userid, $itemid, $date_due );
         my $vars;
         my $output;
         my ( $from, $to ) = $self->get_agencies($xmldoc);

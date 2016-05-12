@@ -21,6 +21,7 @@ use Object::Tiny qw{ name };
 
 use MARC::Record;
 use MARC::Field;
+use Data::Dumper;
 
 use C4::Members qw{ GetMemberDetails IsMemberBlocked };
 use C4::Circulation qw { AddReturn CanBookBeIssued AddIssue };
@@ -55,23 +56,23 @@ sub userdata {
     return $userdata;
 }
 
-sub userenv {
+sub userenv {    #FIXME: This really needs to be in a config file
     my $self    = shift;
     my $branch  = shift || 'AS';
     my @USERENV = (
-        312,
-        'NCIP',
-        '24535000002009',
-        'NCIP',
-        'User',
-        $branch,    #branchcode need to set this properly
-        'Auckland',
-        1,
+        undef,               #set_userenv shifts the first var for no reason
+        312,                 #borrowernumber
+        'NCIP',              #userid
+        '24535000002009',    #cardnumber
+        'NCIP',              #firstname
+        'User',              #surname
+        $branch,             #branchcode need to set this properly
+        'Auckland',          #branchname
+        1,                   #userflags
     );
 
     C4::Context->_new_userenv('DUMMY_SESSION_ID');
     C4::Context::set_userenv(@USERENV);
-    return;
 }
 
 sub checkin {
@@ -105,18 +106,21 @@ sub checkout {
     my $self     = shift;
     my $userid   = shift;
     my $barcode  = shift;
+    my $date_due = shift;
+
     my $borrower = GetMemberDetails( undef, $userid );
     my $item     = GetItem( undef, $barcode );
+
     my $error;
     my $confirm;
+
     $self->userenv( $item->{holdingbranch} );
 
     if ($borrower) {
 
-        ( $error, $confirm ) = CanBookBeIssued( $borrower, $barcode );
+        ( $error, $confirm ) = CanBookBeIssued( $borrower, $barcode, $date_due );
 
         if (%$error) {
-
             # Can't issue item, return error hash
             return ( 1, $error );
         }
@@ -124,10 +128,10 @@ sub checkout {
             return ( 1, $confirm );
         }
         else {
-            my $issue = AddIssue( $borrower, $barcode );
-            my $datedue = $issue->date_due();
-            $datedue =~ s/ /T/;
-            return ( 0, undef, $datedue );    #successfully issued
+            my $issue = AddIssue( $borrower, $barcode, $date_due );
+            $date_due = $issue->date_due();
+            $date_due =~ s/ /T/;
+            return ( 0, undef, $date_due );    #successfully issued
         }
     }
     else {
