@@ -41,7 +41,7 @@ sub handle {
               $xpc->findnodes( '//ns:AuthenticationInput', $root );
 
             my $barcode;
-            my $pin; #FIXME: we do nothing with pin authentication
+            my $pin;    #FIXME: we do nothing with pin authentication
 
             foreach my $node (@authtypes) {
                 my $class =
@@ -76,29 +76,41 @@ sub handle {
 
         # we switch these for the templates
         # because we are responding, to becomes from, from becomes to
-        $vars->{'fromagency'} = $to;
-        $vars->{'toagency'}   = $from;
-
-        $vars->{'messagetype'} = 'LookupUserResponse';
 
         # if we have blank user, we need to return that
         # and can skip looking for elementtypes
         unless ( $user->userdata->{'borrowernumber'} ) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = 'LookupUserResponse';
-            $vars->{'processingerrorelement'} = 'UserIdentifierValue';
-            $vars->{'error_detail'} =
-              'No borrower with matching cardnumber found';
-            $vars->{'processing_error_value'} = $user_id;
-            my $output = $self->render_output( 'problem.tt', $vars );
+            my $output = $self->render_output(
+                'problem.tt',
+                {
+                    fromagency  => $to,
+                    toagency    => $from,
+                    messagetype => 'LookupUserResponse',
+
+                    processingerror        => 1,
+                    processingerrortype    => 'LookupUserResponse',
+                    processingerrorelement => 'UserIdentifierValue',
+                    processing_error_value => $user_id,
+                    error_detail =>
+                      'No borrower with matching cardnumber found',
+
+                }
+            );
             return $output;
         }
         my $elements = $self->get_user_elements($xmldoc);
 
-        #set up the variables for our template
-        $vars->{'elements'} = $elements;
-        $vars->{'user'}     = $user;
-        my $output = $self->render_output( 'response.tt', $vars );
+        my $output = $self->render_output(
+            'response.tt',
+            {
+                fromagency  => $to,
+                toagency    => $from,
+                messagetype => 'LookupUserResponse',
+
+                elements => $elements,
+                user     => $user,
+            }
+        );
         return $output;
 
     }

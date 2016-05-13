@@ -90,6 +90,8 @@ sub xpc {
 
 =head2 get_user_elements($xml)
 
+    my $elements = get_user_elements( $xml );
+
     When passed an xml dom, this will find the user elements and pass convert them into an arrayref
 
 =cut
@@ -107,6 +109,37 @@ sub get_user_elements {
     }
     return \@elements;
 }
+
+=head2 get_item_elements($xml)
+
+    my $elements = $self->get_item_element( $xml );
+
+    When passed an xml dom, this will find the item elements and pass convert them into an arrayref
+
+=cut
+
+sub get_item_elements {
+    my $self   = shift;
+    my $xmldoc = shift;
+    my $xpc    = $self->xpc();
+
+    my $root = $xmldoc->documentElement();
+    my @elements =
+      $xpc->findnodes( '//ns:LookupItem/ItemElementType/Value', $root );
+    unless ( $elements[0] ) {
+        @elements = $xpc->findnodes( '//ns:ItemElementType', $root );
+    }
+    return \@elements;
+}
+
+=head2 get_agencies
+
+    my ( $to, $from ) = $self->get_agencies( $xml );
+
+    Takes an xml dom and returns an array containing the id of the agency the message
+    is from and the id of the agency the message is to.
+
+=cut
 
 sub get_agencies {
     my $self   = shift;

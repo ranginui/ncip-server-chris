@@ -2,55 +2,103 @@
     <ItemIdentifierValue>[% item.barcode | xml %]</ItemIdentifierValue>
 </ItemId>
 <UserOptionalFields>
-[% FOREACH element IN elements %]
-  [% IF element.textContent == 'User Address Information' %]
-     <UserAddressInformation>
-      <UserAddressRoleType>Primary Address</UserAddressRoleType>
-     <PhysicalAddress>
-       <StructuredAddress>
-       <Line1>[% user.userdata.streetnumber | xml %] [% user.userdata.address | xml %]</Line1>
-       [% IF user.userdata.address2 %]
-       <Line2>[% user.userdata.address2 | xml %]</Line2>
-       [% END %]
-       [% IF user.userdata.city %]
-       <Locality>[% user.userdata.city | xml %]</Locality>
-       [% END %]
-       [% IF user.userdata.state %]
-       <Region>[% user.userdata.state | xml %]</Region>
-       [% END %]
-       [% IF user.userdata.zipcode %]
-       <PostalCode>[% user.userdata.zipcode | xml %]</PostalCode>
-       [% END %]
-       [% IF user.userdata.country %]
-       <Country>[% user.userdata.country | xml %]</Country>
-       [% END %]
-       </StructuredAddress>
-     </PhysicalAddress>
-     </UserAddressInformation>
-  [% END %]
-  [% IF element.textContent == 'Name Information' %]
-    <NameInformation>
-      <PersonalNameInformation>
-        <StructuredPersonalUserName>
-          <GivenName>[% user.userdata.firstname | xml %]</GivenName>
-          <Surname>[% user.userdata.surname | xml %]</Surname>
-        </StructuredPersonalUserName>
-      </PersonalNameInformation>
-    </NameInformation>
-  [% END %]
-  [% IF element.textContent == 'Name Information' %]
-    <UserPrivilege>
-      <AgencyUserPrivilegeType>LIBRARY</AgencyUserPrivilegeType>
-      <UserPrivilegeStatusType>[% user.userdata.branchcode %]</UserPrivilegeStatusType>
-    </UserPrivilege>
-    <UserPrivilege>
-      <AgencyUserPrivilegeType>PROFILE</AgencyUserPrivilegeType>
-      <UserPrivilegeStatusType>[% user.userdata.categorycode %]</UserPrivilegeStatusType>
-    </UserPrivilege>
-    <UserPrivilege>
-      <AgencyUserPrivilegeType>STATUS</AgencyUserPrivilegeType>
-      <UserPrivilegeStatusType>[% IF user.userdata.restricted < 0 %]Delinquent[% ELSIF user.userdata.restricted > 0 %]Restricted[% ELSE %]Ok[% END %]</UserPrivilegeStatusType>
-    </UserPrivilege>
-  [% END %]
-[% END %]
+    [% FOREACH element IN elements %]
+        [% IF element.textContent == 'Bibliographic Description' %]
+            <BibliographicDescription>
+                <Author>[% item.biblio.author %]</Author>
+
+                <BibliographicItemId>
+                    <BibliographicItemIdentifier>[% item.biblio.isbn %]</BibliographicItemIdentifier>
+                    <BibliographicItemIdentifierCode>ISBN</BibliographicItemIdentifierCode>
+                </BibliographicItemId>
+
+                <BibliographicRecordId>
+                    <BibliographicRecordIdentifier>[% item.biblio.lccn %]</BibliographicRecordIdentifier>
+                    <BibliographicRecordIdentifierCode>LCCN</BibliographicRecordIdentifierCode>
+                </BibliographicRecordId>
+
+                <Edition>[% item.biblio.editionstatement %]</Edition>
+                <PlaceOfPublication>[% item.biblio.place %]</PlaceOfPublication>
+                <PublicationDate>[% item.biblio.copyrightdate %]</PublicationDate>
+                <Publisher>[% item.biblio.publishercode %]</Publisher>
+                <Title>[% item.biblio.title %]</Title>
+                [%- FILTER collapse -%]
+                    <BibliographicLevel>
+                        [%- FILTER trim -%]
+                            [%- SWITCH item.record.leader.substr(7, 1) -%]
+                            [%- CASE 'a' -%]
+                                Monographic component part
+                            [%- CASE 'b' -%]
+                                Serial component part
+                            [%- CASE 'c' -%]
+                                Collection
+                            [%- CASE 'd' -%]
+                                Subunit
+                            [%- CASE 'i' -%]
+                                Integrating resource
+                            [%- CASE 'm' -%]
+                                Monograph
+                            [%- CASE 's' -%] 
+                                Serial
+                            [%- END -%]
+                        [%- END -%]
+                    </BibliographicLevel>
+                [%- END -%]
+                <Language>[% item.record.field('008').data.substr(35,3) %]</Language>
+                [%- FILTER collapse -%]
+                    <MediumType>
+                        [%- FILTER trim -%]
+                            [%- SWITCH item.itemtype.sip_media_type -%]
+                            [%- CASE '004' -%]
+                                Audio tape
+                            [%- CASE '001' -%]
+                                Book
+                            [%- CASE '010' -%]
+                                Book with audio tape
+                            [%- CASE '009' -%]
+                                Book with CD
+                            [%- CASE '008' -%]
+                                Book with diskette
+                            [%- CASE '003' -%]
+                                Bound journal
+                            [%- CASE '006' -%]
+                                CD/CDROM
+                            [% CASE '007' %]
+                                Diskette
+                            [% CASE '002' %]
+                                Magazine
+                            [% CASE '000' %]
+                                Other
+                            [% CASE '005' %]
+                                Video tape
+                            [%- END -%]
+                        [%- END -%]
+                    </MediumType>
+                [%- END -%]
+            </BibliographicDescription>
+        [% END %]
+
+        [% IF element.textContent == 'Circulation Status' %]
+                [%- FILTER collapse -%]
+                    <CirculationStatus>
+                        [%- FILTER trim -%]
+                            [% IF item.onloan %]
+                                On loan
+                            [% ELSIF item.itemlost %]
+                                Lost
+                            [% ELSIF item.damaged %]
+                                Damaged
+                            [% ELSE %]
+                                Checked In
+                            [% END %]
+                        [%- END -%]
+                    </CirculationStatus>
+                [%- END -%]
+        [% END %]
+
+        [% IF element.textContent == 'Item Description' %]
+            <CallNumber>[% item.itemcallnumber %]</CallNumber>
+            <CopyNumber>[% item.itemcopynumber %]</CopyNumber>
+        [% END %]
+    [% END %]
 </UserOptionalFields>

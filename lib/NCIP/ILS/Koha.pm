@@ -23,23 +23,34 @@ use MARC::Record;
 use MARC::Field;
 
 use C4::Members qw{ GetMemberDetails IsMemberBlocked };
-use C4::Circulation qw { AddReturn CanBookBeIssued AddIssue };
+use C4::Circulation qw{ AddReturn CanBookBeIssued AddIssue };
 use C4::Context;
-use C4::Items qw { GetItem };
+use C4::Items qw{ GetItem };
 use C4::Reserves
-  qw {CanBookBeReserved AddReserve GetReservesFromItemnumber CancelReserve GetReservesFromBiblionumber};
-use C4::Biblio qw {AddBiblio GetMarcFromKohaField GetBiblioData};
+  qw{ CanBookBeReserved AddReserve GetReservesFromItemnumber CancelReserve GetReservesFromBiblionumber };
+use C4::Biblio qw{ AddBiblio GetMarcFromKohaField GetBiblioData GetMarcBiblio };
 use C4::Barcodes::ValueBuilder;
 use C4::Items qw{AddItem};
+use Koha::Database;
 
 sub itemdata {
     my $self    = shift;
     my $barcode = shift;
 
-    my $itemdata = GetItem( undef, $barcode );
+    my $item = GetItem( undef, $barcode );
 
-    if ($itemdata) {
-        return ( $itemdata, undef );
+    if ($item) {
+
+        my $biblio = GetBiblioData( $item->{itemnumber} );
+        $item->{biblio} = $biblio;
+
+        my $record = GetMarcBiblio( $item->{biblionumber} );
+        $item->{record} = $record;
+
+        my $itemtype = Koha::Database->new()->schema()->resultset('Itemtype')->find( $item->{itype} );
+        $item->{itemtype} = $itemtype;
+
+        return ( $item, undef );
     }
     else {
         return ( undef, 1 );    # item not found error
