@@ -23,15 +23,16 @@ use MARC::Record;
 use MARC::Field;
 
 use C4::Members qw{ GetMemberDetails IsMemberBlocked };
-use C4::Circulation qw{ AddReturn CanBookBeIssued AddIssue };
+use C4::Circulation qw{ AddReturn CanBookBeIssued AddIssue GetTransfers };
 use C4::Context;
 use C4::Items qw{ GetItem };
 use C4::Reserves
-  qw{ CanBookBeReserved AddReserve GetReservesFromItemnumber CancelReserve GetReservesFromBiblionumber };
+  qw{ CanBookBeReserved AddReserve GetReservesFromItemnumber CancelReserve GetReservesFromBiblionumber GetReserveStatus };
 use C4::Biblio qw{ AddBiblio GetMarcFromKohaField GetBiblioData GetMarcBiblio };
 use C4::Barcodes::ValueBuilder;
 use C4::Items qw{AddItem};
 use Koha::Database;
+use Koha::Holds;
 
 sub itemdata {
     my $self    = shift;
@@ -49,6 +50,15 @@ sub itemdata {
 
         my $itemtype = Koha::Database->new()->schema()->resultset('Itemtype')->find( $item->{itype} );
         $item->{itemtype} = $itemtype;
+
+        my $hold = GetReserveStatus( $item->{itemnumber} );
+        $item->{hold} = $hold;
+
+        my @holds = Koha::Holds->search({ $item->{biblionumber} });
+        $item->{holds} = \@holds;
+
+        my @transfers = GetTransfers( $item->{itemnumber} );
+        $item->{transfers} = \@transfers;
 
         return ( $item, undef );
     }

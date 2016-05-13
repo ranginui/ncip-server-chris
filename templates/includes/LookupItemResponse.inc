@@ -83,17 +83,29 @@
                     <CirculationStatus>
                         [%- FILTER trim -%]
                             [% IF item.onloan %]
-                                On loan
+                                On Loan
                             [% ELSIF item.itemlost %]
                                 Lost
                             [% ELSIF item.damaged %]
-                                Damaged
+                                Missing
+                            [% ELSIF item.notforlaon > 0 %]
+                                Not Available
+                            [% ELSIF item.notforlaon < 0 %]
+                                On Order
+                            [% ELSIF item.hold.found %]
+                                Available For Pickup
+                            [% ELSIF item.transfers.size %]
+                                In Transit Between Library Locations
                             [% ELSE %]
                                 Checked In
                             [% END %]
                         [%- END -%]
                     </CirculationStatus>
                 [%- END -%]
+        [% END %]
+
+        [% IF element.textContent == 'Hold Queue Length' %]
+            <HoldQueueLength>[% item.holds.size %]</HoldQueueLength>
         [% END %]
 
         [% IF element.textContent == 'Item Description' %]
