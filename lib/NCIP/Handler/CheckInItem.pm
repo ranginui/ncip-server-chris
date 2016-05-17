@@ -27,30 +27,38 @@ sub handle {
         my $xpc    = $self->xpc();
         my $itemid = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
 
-        # checkin the item
+        # check in the item
         my $branch = undef;    # where the hell do we get this from???
-        my $checkin = $self->ils->checkin( $itemid, $branch );
-        my $output;
-        my $vars;
-        $vars->{'messagetype'} = 'CheckInItemResponse';
-        $vars->{'barcode'}     = $itemid;
         my ( $from, $to ) = $self->get_agencies($xmldoc);
-        $vars->{'fromagency'} = $to;
-        $vars->{'toagency'}   = $from;
 
-        if ( !$checkin->{success} ) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $checkin->{'messages'};
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+        my $checkin = $self->ils->checkin( $itemid, $branch );
+
+        if ( $checkin->{success} ) {
+            return $self->render_output(
+                'response.tt',
+                {
+                    message_type => 'CheckInItemResponse',
+                    barcode      => $itemid,
+                    from_agency  => $to,
+                    to_agency    => $from,
+
+                    elements => $self->get_user_elements($xmldoc),
+                    checkin  => $checkin,
+                }
+            );
         }
         else {
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'CheckInItemResponse',
+                    problems     => $checkin->{problems},
+                    from_agency  => $to,
+                    to_agency    => $from,
 
-            $vars->{'elements'} = $self->get_user_elements($xmldoc);
-            $vars->{'checkin'}  = $checkin;
-            $output = $self->render_output( 'response.tt', $vars );
+                }
+            );
         }
-        return $output;
     }
 }
 

@@ -92,15 +92,15 @@ sub handle {
 
         # we switch these for the templates
         # because we are responding, to becomes from, from becomes to
-        $vars->{'fromagency'} = $to;
-        $vars->{'toagency'}   = $from;
+        $vars->{'from_agency'} = $to;
+        $vars->{'to_agency'}   = $from;
 
-        $vars->{'messagetype'} = 'AcceptItemResponse';
+        $vars->{'message_type'} = 'AcceptItemResponse';
         $vars->{'barcode'}     = $itemid;
         if ( !$accepted->{success} ) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $accepted->{'messages'};
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
+            $vars->{'Problem'}        = 1;
+            $vars->{'ProblemType'}    = $accepted->{'messages'};
+            $vars->{'ProblemElement'} = 'UniqueItemIdentifier';
             $output = $self->render_output( 'problem.tt', $vars );
         }
         else {

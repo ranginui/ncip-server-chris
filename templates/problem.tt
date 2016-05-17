@@ -1,67 +1,71 @@
-[%# INCLUDE 'includes/header.inc' %]
-<[% messagetype %]>
-[% IF processingerror %]
-    <Problem>
-        <ProcessingError>
-            [% FOREACH errormessage IN processingerrortype.keys %]
-                [% TRY %]
-                    <ProcessingErrorType>
-                        [%- FILTER collapse -%]
-                            <Value>
-                                [%- FILTER trim -%]
-                                    [%- SWITCH errormessage -%]
-                                    [%- CASE 'BadBarcode' -%]
-                                        We could not find an item with that barcode
-                                    [%- CASE 'NotIssued' -%]
-                                        The item is not on loan
-                                    [%- CASE 'RESERVED' -%]
-                                        The item is on hold for another borrower
-                                    [%- CASE 'RENEW_ISSUE' -%]
-                                        This item is already on loan to this borrower
-                                    [%- CASE 'NO_HOLD' -%]
-                                        There is no hold on this item
-                                    [%- CASE 'NO_HOLD_BORROWER' -%]
-                                        We can not place a hold, we have no borrower information
-                                    [%- CASE 'Wrongbranch' -%]
-                                        We are trying to check this item in at the wrong branch
-                                    [%- CASE 'BORROWER_NOT_FOUND' -%]
-                                        We can not place a request, we have no borrower information
-                                    [%- CASE 'ITEM_NOT_FOUND' -%]
-                                        We can not place a request, we have no item information
-                                    [%- CASE 'ITEMNOTSAMEBRANCH' -%]
-                                        Circulation rules stop this borrower from checking out this item, the borrower and item are not from the same branch
-                                    [%- CASE 'BRANCH_NOT_FOUND' -%]
-                                        We have no branch code
-                                    [%- CASE 'CANNOT_REQUEST' -%]
-                                        Patron cannot make this request
-                                    [%- CASE 'DUPLICATE_REQUEST' -%]
-                                        Patron has already made this request
-                                    [%- CASE 'max_loans_allowed' -%]
-                                        Patron has reached the maximum the number of checkouts for this item type
-                                    [%- CASE 'TOO_MANY' -%]
-                                        [% THROW duplicate 'TOO_MANY' %]
-                                    [%- CASE 'current_loan_count' -%]
-                                        [% THROW duplicate 'current_loan_count' %]
-                                    [%- CASE -%]
-                                        [% errormessage %]
-                                    [%- END -%]
-                                [%- END -%]
-                            </Value>
+<[%- message_type -%]>
+    [% FOREACH errormessage IN processingerrortype.keys %]
+        [% TRY %]
+            <Problem>
+                <ProblemType>
+                    [%- FILTER collapse -%]
+                        [%- FILTER trim -%]
+                            [%- SWITCH errormessage -%]
+                            [%- CASE 'BadBarcode' -%]
+                                We could not find an item with that barcode
+                            [%- CASE 'NotIssued' -%]
+                                Item Not Checked Out
+                            [%- CASE 'RESERVED' -%]
+                                The item is on hold for another borrower
+                            [%- CASE 'RENEW_ISSUE' -%]
+                                This item is already on loan to this borrower
+                            [%- CASE 'NO_HOLD' -%]
+                                There is no hold on this item
+                            [%- CASE 'NO_HOLD_BORROWER' -%]
+                                We can not place a hold, we have no borrower information
+                            [%- CASE 'Wrongbranch' -%]
+                                We are trying to check this item in at the wrong branch
+                            [%- CASE 'BORROWER_NOT_FOUND' -%]
+                                We can not place a request, we have no borrower information
+                            [%- CASE 'ITEM_NOT_FOUND' -%]
+                                We can not place a request, we have no item information
+                            [%- CASE 'ITEMNOTSAMEBRANCH' -%]
+                                Circulation rules stop this borrower from checking out this item, the borrower and item are not from the same branch
+                            [%- CASE 'BRANCH_NOT_FOUND' -%]
+                                We have no branch code
+                            [%- CASE 'CANNOT_REQUEST' -%]
+                                Patron cannot make this request
+                            [%- CASE 'DUPLICATE_REQUEST' -%]
+                                Patron has already made this request
+                            [%- CASE 'max_loans_allowed' -%]
+                                Patron has reached the maximum the number of checkouts for this item type
+                            [%- CASE 'TOO_MANY' -%]
+                                [% THROW duplicate 'TOO_MANY' %]
+                            [%- CASE 'current_loan_count' -%]
+                                [% THROW duplicate 'current_loan_count' %]
+                            [%- CASE -%]
+                                [% errormessage %]
+                            [%- END -%]
                         [%- END -%]
-                    </ProcessingErrorType>
-                [% CATCH %]
-                    [% CLEAR %]
-                [% END %]
-            [% END %]
+                    [%- END -%]
+                </ProblemType>
+                <ProblemDetail>[% ProblemDetail | xml %]</ProblemDetail>
+                <ProblemElement>[% ProblemElement | xml %]</ProblemElement>
+                <ProblemValue>[% IF barcode %][% barcode | xml %][% ELSE %][% processing_error_value | xml %][% END %]</ProblemValue>
+            </Problem>
+        [% CATCH %]
+            [% CLEAR %]
+        [% END %]
+    [% END %]
+    [%- FOREACH p IN problems -%]
+        <Problem>
+            <ProblemType>[% p.problem_type | xml %]</ProblemType>
+            [%- IF p.problem_detail -%]
+                <ProblemDetail>[% p.problem_detail | xml %]</ProblemDetail>
+            [%- END -%]
 
-            <ProcessingErrorElement>
-                <ElementName>[% processingerrorelement | xml %]</ElementName>
-                <ProcessingErrorValue>[% IF barcode %][% barcode | xml %][% ELSE %][% processing_error_value | xml %][% END %]</ProcessingErrorValue>
-            </ProcessingErrorElement>
-        </ProcessingError>
+            [%- IF p.problem_element -%]
+                <ProblemElement>[% p.problem_element | xml %]</ProblemElement>
+            [%- END -%]
 
-        <ProblemDetail>[% error_detail | xml %]</ProblemDetail>
-
-    </Problem>
-[% END %]
-</[% messagetype %]>
+            [%- IF p.problem_value -%]
+                <ProblemValue>[% p.problem_value | xml %]</ProblemValue>
+            [%- END -%]
+        </Problem>
+    [%- END -%]
+</[%- message_type -%]>

@@ -60,7 +60,7 @@ sub handle {
                 'response.tt',
                 {
                     barcode     => $itemid,
-                    messagetype => 'RequestItemResponse',
+                    message_type => 'RequestItemResponse',
                     elements    => $elements,
                     messages    => $result->{messages},
                 }
@@ -71,10 +71,10 @@ sub handle {
                 'problem.tt',
                 {
                     barcode                => $itemid,
-                    messagetype            => 'RequestItemResponse',
-                    processingerror        => 1,
-                    processingerrortype    => $result->{messages},
-                    processingerrorelement => 'UniqueItemIdentifier',
+                    message_type            => 'RequestItemResponse',
+                    Problem        => 1,
+                    ProblemType    => $result->{messages},
+                    ProblemElement => 'UniqueItemIdentifier',
                 }
 
             );

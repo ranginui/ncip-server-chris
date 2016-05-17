@@ -1,10 +1,10 @@
 <ItemId>
-    <AgencyId>[% fromagency | trim%]</AgencyId>
+    <AgencyId>[% from_agency | trim%]</AgencyId>
     <ItemIdentifierType>Barcode Id</ItemIdentifierType>
     <ItemIdentifierValue>[% barcode | xml %]</ItemIdentifierValue>
 </ItemId>
 <UserId>
-    <AgencyId>[% toagency | trim %]</AgencyId>
+    <AgencyId>[% to_agency | trim %]</AgencyId>
     <UserIdentifierType>Barcode Id</UserIdentifierType>
     <UserIdentifierValue>[% userid | xml %]</UserIdentifierValue>
 </UserId>

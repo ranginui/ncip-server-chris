@@ -46,8 +46,10 @@ sub handle {
             foreach my $node (@authtypes) {
                 my $class =
                   $xpc->findnodes( './ns:AuthenticationInputType', $node );
+
                 my $value =
                   $xpc->findnodes( './ns:AuthenticationInputData', $node );
+
                 if ( $class->[0]->textContent eq 'Barcode Id' ) {
                     $barcode = $value->[0]->textContent;
                 }
@@ -71,7 +73,6 @@ sub handle {
         my $vars;
 
         #  this bit should be at a lower level
-
         my ( $from, $to ) = $self->get_agencies($xmldoc);
 
         # we switch these for the templates
@@ -79,40 +80,39 @@ sub handle {
 
         # if we have blank user, we need to return that
         # and can skip looking for elementtypes
-        unless ( $user->userdata->{'borrowernumber'} ) {
-            my $output = $self->render_output(
-                'problem.tt',
+        if ( $user->userdata->{'borrowernumber'} ) {
+            my $elements = $self->get_user_elements($xmldoc);
+            return $self->render_output(
+                'response.tt',
                 {
-                    fromagency  => $to,
-                    toagency    => $from,
-                    messagetype => 'LookupUserResponse',
+                    from_agency  => $to,
+                    to_agency    => $from,
+                    message_type => 'LookupUserResponse',
 
-                    processingerror        => 1,
-                    processingerrortype    => 'LookupUserResponse',
-                    processingerrorelement => 'UserIdentifierValue',
-                    processing_error_value => $user_id,
-                    error_detail =>
-                      'No borrower with matching cardnumber found',
-
+                    elements => $elements,
+                    user     => $user,
                 }
             );
-            return $output;
         }
-        my $elements = $self->get_user_elements($xmldoc);
+        else {
+            return $self->render_output(
+                'problem.tt',
+                {
+                    from_agency  => $to,
+                    to_agency    => $from,
+                    message_type => 'LookupUserResponse',
 
-        my $output = $self->render_output(
-            'response.tt',
-            {
-                fromagency  => $to,
-                toagency    => $from,
-                messagetype => 'LookupUserResponse',
-
-                elements => $elements,
-                user     => $user,
-            }
-        );
-        return $output;
-
+                    problems => [
+                        {
+                            problem_type    => 'Unkown User',
+                            problem_detail  => 'User is not known',
+                            problem_element => 'UserId',
+                            problem_value   => $user_id,
+                        }
+                    ]
+                }
+            );
+        }
     }
 }
 

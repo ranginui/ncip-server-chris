@@ -31,30 +31,36 @@ sub handle {
         my $date_due = $xpc->findnodes( '//ns:DesiredDateDue',      $root );
 
         # checkout the item
-        my ( $error, $messages, $datedue ) =
-          $self->ils->checkout( $userid, $itemid, $date_due );
-        my $vars;
-        my $output;
-        my ( $from, $to ) = $self->get_agencies($xmldoc);
-        $vars->{'fromagency'} = $to;
-        $vars->{'toagency'}   = $from;
+        my $data = $self->ils->checkout( $userid, $itemid, $date_due );
 
-        $vars->{'barcode'}     = $itemid;
-        $vars->{'messagetype'} = 'CheckOutItemResponse';
-        $vars->{'userid'}      = $userid;
-        if ($error) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $messages;
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+        my ( $from, $to ) = $self->get_agencies($xmldoc);
+
+        if ( $data->{success} ) {
+            my $elements = $self->get_user_elements($xmldoc);
+            return $self->render_output(
+                'response.tt',
+                {
+                    from_agency  => $to,
+                    to_agency    => $from,
+                    barcode      => $itemid,
+                    message_type => 'CheckOutItemResponse',
+                    userid       => $userid,
+
+                    elements => $elements,
+                    datedue  => $data->{date_due},
+                }
+
+            );
         }
         else {
-            my $elements = $self->get_user_elements($xmldoc);
-            $vars->{'elements'} = $elements;
-            $vars->{'datedue'}  = $datedue;
-            $output = $self->render_output( 'response.tt', $vars );
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'CheckOutItemResponse',
+                    problems     => $data->{problems},
+                }
+            );
         }
-        return $output;
     }
 }
 

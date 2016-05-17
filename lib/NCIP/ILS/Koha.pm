@@ -48,13 +48,14 @@ sub itemdata {
         my $record = GetMarcBiblio( $item->{biblionumber} );
         $item->{record} = $record;
 
-        my $itemtype = Koha::Database->new()->schema()->resultset('Itemtype')->find( $item->{itype} );
+        my $itemtype = Koha::Database->new()->schema()->resultset('Itemtype')
+          ->find( $item->{itype} );
         $item->{itemtype} = $itemtype;
 
         my $hold = GetReserveStatus( $item->{itemnumber} );
         $item->{hold} = $hold;
 
-        my @holds = Koha::Holds->search({ $item->{biblionumber} });
+        my @holds = Koha::Holds->search( { $item->{biblionumber} } );
         $item->{holds} = \@holds;
 
         my @transfers = GetTransfers( $item->{itemnumber} );
@@ -99,11 +100,12 @@ sub userenv {    #FIXME: This really needs to be in a config file
 }
 
 sub checkin {
-    my $self       = shift;
-    my $barcode    = shift;
-    my $branch     = shift;
-    my $exemptfine = undef;
-    my $dropbox    = undef;
+    my $self        = shift;
+    my $barcode     = shift;
+    my $branch      = shift;
+    my $exempt_fine = undef;
+    my $dropbox     = undef;
+
     $self->userenv();
 
     unless ($branch) {
@@ -112,18 +114,50 @@ sub checkin {
     }
 
     my ( $success, $messages, $issue, $borrower ) =
-      AddReturn( $barcode, $branch, $exemptfine, $dropbox );
+      AddReturn( $barcode, $branch, $exempt_fine, $dropbox );
 
     $success ||= 1 if $messages->{LocalUse};
+    $success &&= 0 if $messages->{NotIssued};
+
+    my @problems;
+
+    push(
+        @problems,
+        {
+            problem_type    => 'Item Not Checked Out',
+            problem_element => 'UniqueItemIdentifier',
+            problem_value   => $barcode,
+            problem_detail =>
+              'There is no record of the check out of the item.',
+        }
+    ) if $messages->{NotIssued};
+
+    push(
+        @problems,
+        {
+            problem_type    => 'Unknown Item',
+            problem_element => 'UniqueItemIdentifier',
+            problem_value   => $barcode,
+            problem_detail  => 'Item is not known.',
+        }
+    ) if $messages->{BadBarcode};
+
     my $result = {
-        success         => $success,
-        messages        => $messages,
-        iteminformation => $issue,
-        borrower        => $borrower
+        success   => $success,
+        problems  => \@problems,
+        item_data => $issue,
+        borrower  => $borrower
     };
 
     return $result;
 }
+
+=head2 checkout
+
+{ success => $success, problems => \@problems, date_due => $date_due } =
+  $ils->checkout( $userid, $itemid, $date_due );
+
+=cut
 
 sub checkout {
     my $self     = shift;
@@ -134,34 +168,152 @@ sub checkout {
     my $borrower = GetMemberDetails( undef, $userid );
     my $item = GetItem( undef, $barcode );
 
-    my $error;
-    my $confirm;
-
     $self->userenv( $item->{holdingbranch} );
 
     if ($borrower) {
-
-        ( $error, $confirm ) =
+        my ( $error, $confirm ) =
           CanBookBeIssued( $borrower, $barcode, $date_due );
 
-        if (%$error) {
+        my $reasons = { %$error, %$confirm };
 
-            # Can't issue item, return error hash
-            return ( 1, $error );
-        }
-        elsif (%$confirm) {
-            return ( 1, $confirm );
+        if (%$reasons) {
+            my @problems;
+
+            push(
+                @problems,
+                {
+                    problem_type    => 'Unknown Item',
+                    problem_detail  => 'Item is not known.',
+                    problem_element => 'ItemIdentifierValue',
+                    problem_value   => $barcode,
+                }
+            ) if $reasons->{UNKNOWN_BARCODE};
+
+            push(
+                @problems,
+                {
+                    problem_type => 'User Ineligible To Che ck Out This Item',
+                    problem_detail =>
+                      'Item is alredy checked out to this User.',
+                    problem_element => 'ItemIdentifierValue',
+                    problem_value   => $barcode,
+                    problem_element => 'UserIdentifierValue',
+                    problem_value   => $userid,
+                }
+            ) if $reasons->{BIBLIO_ALREADY_ISSUED};
+
+            push(
+                @problems,
+                {
+                    problem_type    => 'Invalid Date',
+                    problem_detail  => 'Item is not known.',
+                    problem_element => 'DesiredDateDue',
+                    problem_value   => $date_due,
+                }
+            ) if $reasons->{INVALID_DATE} || $reasons->{INVALID_DATE};
+
+            push(
+                @problems,
+                {
+                    problem_type    => 'User Blocked',
+                    problem_element => 'UserIdentifierValue',
+                    problem_value   => $userid,
+                    problem_detail  => $reasons->{GNA} ? 'Gone no address'
+                    : $reasons->{LOST}               ? 'Card lost'
+                    : $reasons->{DBARRED}            ? 'User restricted'
+                    : $reasons->{EXPIRED}            ? 'User expired'
+                    : $reasons->{DEBT}               ? 'User has debt'
+                    : $reasons->{USERBLOCKEDOVERDUE} ? 'User has overdue items'
+                    : $reasons->{USERBLOCKEDNOENDDATE} ? 'User restricted'
+                    : $reasons->{AGE_RESTRICTION}      ? 'Age restriction'
+                    :                                    'Reason unkown'
+                }
+              )
+              if $reasons->{GNA}
+              || $reasons->{LOST}
+              || $reasons->{DBARRED}
+              || $reasons->{EXPIRED}
+              || $reasons->{DEBT}
+              || $reasons->{USERBLOCKEDOVERDUE}
+              || $reasons->{USERBLOCKEDOVERDUEDATE}
+              || $reasons->{AGE_RESTRICTION};
+
+            push(
+                @problems,
+                {
+                    problem_type => 'Maximum Check Outs Exceeded',
+                    problem_detail =>
+                      'Check out cannot proceed because the User '
+                      . 'already has the maximum number of items checked out.',
+                    problem_element => 'UserIdentifierValue',
+                    problem_value   => $userid,
+                }
+            ) if $reasons->{TOO_MANY};
+
+            push(
+                @problems,
+                {
+                    problem_type   => 'Item Does Not Circulate',
+                    problem_detail => 'Check out of Item cannot proceed '
+                      . 'because the Item is non-circulating.',
+                    problem_element => 'ItemIdentifierValue',
+                    problem_value   => $barcode,
+                }
+            ) if $reasons->{NOT_FOR_LOAN} || $reasons->{NOT_FOR_LOAN_FORCING};
+
+            push(
+                @problems,
+                {
+                    problem_type =>
+                      'Check Out Not Allowed - Item Has Outstanding Requests',
+                    problem_detail => 'Check out of Item cannot proceed '
+                      . 'because the Item has outstanding requests.',
+                    problem_element => 'ItemIdentifierValue',
+                    problem_value   => $barcode,
+                }
+            ) if $reasons->{RESERVE_WAITING} || $reasons->{RESERVED};
+
+            push(
+                @problems,
+                {
+                    problem_type   => 'Resource Cannot Be Provided',
+                    problem_detail => 'Check out cannot proceed because '
+                      . 'the desired resource cannot be provided',
+                    problem_element => 'ItemIdentifierValue',
+                    problem_value   => $barcode,
+                }
+              )
+              if $reasons->{WTHDRAWN}
+              || $reasons->{RESTRICTED}
+              || $reasons->{ITEM_LOST}
+              || $reasons->{ITEM_LOST}
+              || $reasons->{BORRNOTSAMEBRANCH}
+              || $reasons->{HIGHHOLDS}
+              || $reasons->{NO_RENEWAL_FOR_ONSITE_CHECKOUTS}    #FIXME: Should
+              || $reasons->{NO_MORE_RENEWALS}                   #FIXME have
+              || $reasons->{RENEW_ISSUE};    #FIXME different error
+
+            return { success => 0, problems => \@problems };
         }
         else {
             my $issue = AddIssue( $borrower, $barcode, $date_due );
             $date_due = $issue->date_due();
             $date_due =~ s/ /T/;
-            return ( 0, undef, $date_due );    #successfully issued
+            return { success => 1, date_due => $date_due };
         }
     }
     else {
-        $error->{'badborrower'} = 1;
-        return ( 1, $error );
+        my @problems;
+        push(
+            @problems,
+            {
+                problem_type    => 'Unknown User',
+                problem_detail  => 'User is not known',
+                problem_element => 'UserIdentifierValue',
+                problem_value   => $userid,
+            }
+        );
+        return { success => 0, problems => \@problems };
     }
 }
 
@@ -324,8 +476,12 @@ sub acceptitem {
             $record = MARC::Record->new();
             $record->leader('     nac  22     1u 4500');
             $record->insert_fields_ordered(
-                MARC::Field->new( '100', '1', '0', 'a' => $iteminfo->{author} ),
-                MARC::Field->new( '245', '1', '0', 'a' => $iteminfo->{title} ),
+                MARC::Field->new(
+                    '100', '1', '0', 'a' => $iteminfo->{author}
+                ),
+                MARC::Field->new(
+                    '245', '1', '0', 'a' => $iteminfo->{title}
+                ),
                 MARC::Field->new(
                     '260', '1', '0',
                     'b' => $iteminfo->{publisher},
@@ -409,11 +565,11 @@ sub acceptitem {
     }
 
     $result = {
-        success         => $success,
-        messages        => $messages,
-        iteminformation => $issue,
-        borrower        => $borrower,
-        newbarcode      => $barcode
+        success    => $success,
+        messages   => $messages,
+        item_data  => $issue,
+        borrower   => $borrower,
+        newbarcode => $barcode
     };
 
     return $result;

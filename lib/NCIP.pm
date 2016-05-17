@@ -158,10 +158,10 @@ sub parse_request {
 
 sub _error {
     my $self         = shift;
-    my $error_detail = shift;
+    my $ProblemDetail = shift;
     my $vars;
-    $vars->{'error_detail'} = $error_detail;
-    $vars->{'messagetype'} =
+    $vars->{'ProblemDetail'} = $ProblemDetail;
+    $vars->{'message_type'} =
       'ItemRequestedResponse';    # No idea what this type should be
     my $template = Template->new(
         { INCLUDE_PATH => $self->config->('NCIP.templates.value'), } );

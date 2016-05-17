@@ -31,12 +31,12 @@ sub handle {
         my $result    = $self->ils->cancelrequest($requestid);
         my $vars;
         my $output;
-        $vars->{'messagetype'} = 'CancelRequestItemResponse';
+        $vars->{'message_type'} = 'CancelRequestItemResponse';
 
         if ( !$result->{'success'} ) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $result->{'messages'};
-            $vars->{'processingerrorelement'} = 'UniqueRequestIdentifier';
+            $vars->{'Problem'}        = 1;
+            $vars->{'ProblemType'}    = $result->{'messages'};
+            $vars->{'ProblemElement'} = 'UniqueRequestIdentifier';
             $output = $self->render_output( 'problem.tt', $vars );
         }
         else {

@@ -44,13 +44,13 @@ sub handle {
                 my $output = $self->render_output(
                     'problem.tt',
                     {
-                        messagetype => 'LookupItemResponse',
+                        message_type => 'LookupItemResponse',
 
-                        processingerror        => 1,
-                        processingerrortype    => 'BadBarcode',
-                        processingerrorelement => 'ItemIdentifierValue',
+                        Problem        => 1,
+                        ProblemType    => 'BadBarcode',
+                        ProblemElement => 'ItemIdentifierValue',
                         processing_error_value => $item_id,
-                        error_detail => 'No item with matching barcode found',
+                        ProblemDetail => 'No item with matching barcode found',
 
                     }
                 );
@@ -64,7 +64,7 @@ sub handle {
         my $output = $self->render_output(
             'response.tt',
             {
-                messagetype => 'LookupItemResponse',
+                message_type => 'LookupItemResponse',
 
                 item     => $item_data,
                 elements => $elements,

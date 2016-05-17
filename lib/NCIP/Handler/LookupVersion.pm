@@ -39,9 +39,9 @@ sub handle {
     if ($xmldoc) {
         my $vars;
         my ( $from, $to ) = $self->get_agencies($xmldoc);
-        $vars->{'fromagency'}  = $to;
-        $vars->{'toagency'}    = $from;
-        $vars->{'messagetype'} = 'LookupVersionResponse';
+        $vars->{'from_agency'}  = $to;
+        $vars->{'to_agency'}    = $from;
+        $vars->{'message_type'} = 'LookupVersionResponse';
         $vars->{'versions'}    = [NCIP::Const::SUPPORTED_VERSIONS];
         my $output = $self->render_output( 'response.tt', $vars );
         return $output;

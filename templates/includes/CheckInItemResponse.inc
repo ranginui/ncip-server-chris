@@ -1,5 +1,3 @@
 <UniqueItemId>
-<ItemIdentifierValue>[% barcode | xml %]</ItemIdentifierValue>
+    <ItemIdentifierValue>[% barcode | xml %]</ItemIdentifierValue>
 </UniqueItemId>
-<UserOptionalFields>
-</UserOptionalFields>

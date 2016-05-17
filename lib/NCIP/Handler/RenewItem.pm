@@ -32,12 +32,12 @@ sub handle {
         my $renewed = $self->ils->renew($itemid);
         my $output;
         my $vars;
-        $vars->{'messagetype'} = 'RenewItemResponse';
+        $vars->{'message_type'} = 'RenewItemResponse';
         $vars->{'barcode'}     = $itemid;
         if ( !$renewed->{success} ) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $renewed->{'messages'};
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
+            $vars->{'Problem'}        = 1;
+            $vars->{'ProblemType'}    = $renewed->{'messages'};
+            $vars->{'ProblemElement'} = 'UniqueItemIdentifier';
             $output = $self->render_output( 'problem.tt', $vars );
         }
         else {
