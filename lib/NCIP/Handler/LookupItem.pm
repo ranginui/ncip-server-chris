@@ -37,41 +37,35 @@ sub handle {
             }
         );
 
-        my ( $item_data, $error ) = $item->itemdata();
+        my $item_data = $item->itemdata();
 
-        if ($error) {
-            if ($error) {
-                my $output = $self->render_output(
-                    'problem.tt',
-                    {
-                        message_type => 'LookupItemResponse',
-
-                        Problem        => 1,
-                        ProblemType    => 'BadBarcode',
-                        ProblemElement => 'ItemIdentifierValue',
-                        processing_error_value => $item_id,
-                        ProblemDetail => 'No item with matching barcode found',
-
-                    }
-                );
-                return $output;
-            }
-
+        if ($item_data) {
+            my $elements = $self->get_item_elements($xmldoc);
+            return $self->render_output(
+                'response.tt',
+                {
+                    message_type => 'LookupItemResponse',
+                    item         => $item_data,
+                    elements     => $elements,
+                }
+            );
         }
-
-        my $elements = $self->get_item_elements($xmldoc);
-
-        my $output = $self->render_output(
-            'response.tt',
-            {
-                message_type => 'LookupItemResponse',
-
-                item     => $item_data,
-                elements => $elements,
-            }
-        );
-
-        return $output;
+        else {
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'LookupItemResponse',
+                    problems     => [
+                        {
+                            problem_type    => 'Unknown Item',
+                            problem_detail  => 'Item is not known.',
+                            problem_element => 'ItemIdentifierValue',
+                            problem_value   => $item_id,
+                        }
+                    ]
+                }
+            );
+        }
     }
 }
 

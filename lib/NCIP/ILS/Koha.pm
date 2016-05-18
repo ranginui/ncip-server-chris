@@ -1,4 +1,3 @@
-#
 #===============================================================================
 #
 #         FILE: Koha.pm
@@ -22,15 +21,41 @@ use Object::Tiny qw{ name };
 use MARC::Record;
 use MARC::Field;
 
-use C4::Members qw{ GetMemberDetails IsMemberBlocked };
-use C4::Circulation qw{ AddReturn CanBookBeIssued AddIssue GetTransfers };
+use C4::Members qw{
+  GetMemberDetails
+  IsMemberBlocked
+};
+use C4::Circulation qw{
+  AddReturn
+  CanBookBeIssued
+  AddIssue
+  GetTransfers
+  CanBookBeRenewed
+  AddRenewal
+};
 use C4::Context;
-use C4::Items qw{ GetItem };
-use C4::Reserves
-  qw{ CanBookBeReserved AddReserve GetReservesFromItemnumber CancelReserve GetReservesFromBiblionumber GetReserveStatus };
-use C4::Biblio qw{ AddBiblio GetMarcFromKohaField GetBiblioData GetMarcBiblio };
+use C4::Items qw{
+  GetItem
+};
+use C4::Reserves qw{
+  CanBookBeReserved
+  CanItemBeReserved
+  AddReserve
+  GetReservesFromItemnumber
+  CancelReserve
+  GetReservesFromBiblionumber
+  GetReserveStatus
+};
+use C4::Biblio qw{
+  AddBiblio
+  GetMarcFromKohaField
+  GetBiblioData
+  GetMarcBiblio
+};
 use C4::Barcodes::ValueBuilder;
-use C4::Items qw{AddItem};
+use C4::Items qw{
+  AddItem
+};
 use Koha::Database;
 use Koha::Holds;
 
@@ -41,7 +66,6 @@ sub itemdata {
     my $item = GetItem( undef, $barcode );
 
     if ($item) {
-
         my $biblio = GetBiblioData( $item->{itemnumber} );
         $item->{biblio} = $biblio;
 
@@ -61,10 +85,7 @@ sub itemdata {
         my @transfers = GetTransfers( $item->{itemnumber} );
         $item->{transfers} = \@transfers;
 
-        return ( $item, undef );
-    }
-    else {
-        return ( undef, 1 );    # item not found error
+        return $item;
     }
 }
 
@@ -192,7 +213,7 @@ sub checkout {
             push(
                 @problems,
                 {
-                    problem_type => 'User Ineligible To Che ck Out This Item',
+                    problem_type => 'User Ineligible To Check Out This Item',
                     problem_detail =>
                       'Item is alredy checked out to this User.',
                     problem_element => 'ItemIdentifierValue',
@@ -303,37 +324,102 @@ sub checkout {
         }
     }
     else {
-        my @problems;
-        push(
-            @problems,
+        my $problems = [
             {
                 problem_type    => 'Unknown User',
                 problem_detail  => 'User is not known',
                 problem_element => 'UserIdentifierValue',
                 problem_value   => $userid,
             }
-        );
-        return { success => 0, problems => \@problems };
+        ];
+        return { success => 0, problems => $problems };
     }
 }
 
 sub renew {
-    my $self     = shift;
-    my $barcode  = shift;
-    my $userid   = shift;
-    my $borrower = GetMemberDetails( undef, $userid );
-    if ($borrower) {
-        my $datedue = AddRenewal( $barcode, $borrower->{'borrowernumber'} );
-        my $result = {
-            success => 1,
-            datedue => $datedue
-        };
-        return $result;
+    my $self    = shift;
+    my $barcode = shift;
+    my $userid  = shift;
 
-    }
-    else {
-        #handle stuff here
-    }
+    my $borrower = GetMemberDetails( undef, $userid );
+    return {
+        success  => 0,
+        problems => [
+            {
+                problem_type    => 'Unknown User',
+                problem_detail  => 'User is not known',
+                problem_element => 'UserIdentifierValue',
+                problem_value   => $userid,
+            }
+        ]
+      }
+      unless $borrower;
+
+    my $item = GetItem( undef, $barcode );
+    return {
+        success  => 0,
+        problems => [
+            {
+                problem_type    => 'Unknown Item',
+                problem_detail  => 'Item is not known.',
+                problem_element => 'UniqueItemIdentifier',
+                problem_value   => $barcode,
+            }
+        ]
+      }
+      unless $item;
+
+    my ( $ok, $error ) =
+      CanBookBeRenewed( $borrower->{borrowernumber}, $item->{itemnumber} );
+
+    return {
+        success  => 0,
+        problems => [
+            {
+                problem_type => 'Item Not Checked Out',
+                problem_detail =>
+                  'There is no record of the check out of the Item.',
+                problem_element => 'UniqueItemIdentifier',
+                problem_value   => $barcode,
+            }
+        ]
+      }
+      if $error eq 'no_checkout';
+
+    return {
+        success  => 0,
+        problems => [
+            {
+                problem_type =>
+                  'Renewal Not Allowed - Item Has Outstanding Requests',
+                problem_detail =>
+                  'Item may not be renewed because outstanding requests '
+                  . 'take precedence over the renewal request.',
+                problem_element => 'UniqueItemIdentifier',
+                problem_value   => $barcode,
+            }
+        ]
+      }
+      if $error eq 'on_reserve';
+
+    return {
+        success  => 0,
+        problems => [
+            {
+                problem_type    => 'Item Not Renewable',
+                problem_detail  => 'Item may not be renewed.',
+                problem_element => 'UniqueItemIdentifier',
+                problem_value   => $barcode,
+            }
+        ]
+      }
+      if $error;    # Generic message for all other reasons
+
+    my $datedue = AddRenewal( $barcode, $borrower->{'borrowernumber'} );
+    return {
+        success => 1,
+        datedue => $datedue
+    };
 }
 
 sub request {
@@ -346,98 +432,242 @@ sub request {
 
     my $borrower = GetMemberDetails( undef, $cardnumber );
 
-    unless ($borrower) {
-        return { success => 0, messages => { 'BORROWER_NOT_FOUND' => 1 } };
-    }
+    return {
+        success  => 0,
+        problems => [
+            {
+                problem_type    => 'Unknown User',
+                problem_detail  => 'User is not known.',
+                problem_element => 'UserIdentifierValue',
+                problem_value   => $cardnumber,
+            }
+        ]
+      }
+      unless $borrower;
 
     #FIXME: Maybe this should be configurable?
     # If no branch is given, fall back to patron home library
     $branchcode ||= q{};
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode ||= $borrower->{branchcode};
-    unless ($branchcode) {
-        return { success => 0, messages => { 'BRANCH_NOT_FOUND' => 1 } };
-    }
+    return {
+        success  => 0,
+        problems => [
+            {
+                #FIXME: probably no the most apropo type
+                # but unable to find a better one
+                problem_type => 'Unknown Agency',
+                problem_detail =>
+                  'The library from which the item is requested is not known.',
+            }
+        ]
+      }
+      unless $branchcode;
 
     my $itemdata;
-    if ($barcode) {
-        $itemdata = GetItem( undef, $barcode );
-    }
-    else {
-        if ( $type eq 'SYSNUMBER' ) {
-            $itemdata = GetBiblioData($biblionumber);
-        }
-        elsif ( $type eq 'ISBN' ) {
+    $itemdata = GetItem( undef, $barcode );
 
-            #deal with this
-            die("Request by ISBN not yet implemented");
-        }
+    if ($barcode) {
+        return {
+            success  => 0,
+            problems => [
+                {
+                    problem_type    => 'Unknown Item',
+                    problem_detail  => 'Item is not known.',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                }
+            ]
+          }
+          unless $itemdata;
     }
 
     unless ($itemdata) {
-        return { success => 0, messages => {'ITEM_NOT_FOUND'} };
-    }
+        if ( $type eq 'SYSNUMBER' ) {
+            $itemdata = GetBiblioData($biblionumber);
 
-    $self->userenv();
-
-    if (
-        CanBookBeReserved(
-            $borrower->{borrowernumber},
-            $itemdata->{biblionumber}
-        )
-      )
-    {
-        my $biblioitemnumber = $itemdata->{biblionumber};
-
-        # Add reserve here
-        my $request_id = AddReserve(
-            $branchcode, $borrower->{borrowernumber},
-            $itemdata->{biblionumber}, [$biblioitemnumber],
-            1,     undef,
-            undef, 'Placed By ILL',
-            '',    $itemdata->{'itemnumber'} || undef,
-            undef
-        );
-
-        if ($request_id) {
             return {
-                success  => 1,
-                messages => {
-                    request_id => $request_id
-                }
+                success  => 0,
+                problems => [
+                    {
+                        problem_type    => 'Unknown Item',
+                        problem_detail  => 'Item is not known.',
+                        problem_element => 'BibliographicRecordIdentifier',
+                        problem_value   => $biblionumber,
+                    }
+                ]
+              }
+              unless $itemdata;
+        }
+        elsif ( $type eq 'ISBN' ) {
+            return {
+                success  => 0,
+                problems => [
+                    {
+                        problem_type => 'Tempaorary Processing Failure',
+                        problem_detail =>
+                          'Unable to handle record look up by ISBN. '
+                          . 'Not yet implemented',
+                        problem_element => 'BibliographicItemIdentifierCode',
+                        problem_value   => $type,
+                    }
+                ]
             };
         }
         else {
             return {
                 success  => 0,
-                messages => {
-                    'DUPLICATE_REQUEST' => 1,
-                }
+                problems => [
+                    {
+                        problem_type    => 'Tempaorary Processing Failure',
+                        problem_detail  => 'The identifier code is not known.',
+                        problem_element => 'BibliographicItemIdentifierCode',
+                        problem_value   => $type,
+                    }
+                ]
             };
-
         }
     }
-    else {
+
+    $self->userenv();
+
+    my $borrowernumber = $borrower->{borrowernumber};
+    my $itemnumber     = $itemdata->{itemnumber};
+
+    my $can_reserve =
+      $itemnumber
+      ? CanItemBeReserved( $borrowernumber, $itemnumber )
+      : CanBookBeReserved( $borrowernumber, $biblionumber );
+
+    if ( $can_reserve eq 'OK' ) {
+        my $request_id = AddReserve(
+            $branchcode,
+            $borrower->{borrowernumber},
+            $biblionumber,
+            my $bibitems,
+            my $priority = 1,
+            my $resdate,
+            my $expdate,
+            my $notes = 'Placed By ILL',
+            my $title,
+            my $checkitem = $itemnumber,
+            my $found,
+        );
+
+        if ($request_id) {
+            return {
+                success    => 1,
+                request_id => $request_id,
+            };
+        }
+        else {
+            return {
+                success  => 0,
+                problems => [
+                    {
+                        problem_type => 'Duplicate Request',
+                        problem_detail =>
+                          'Request for the Item already exists; '
+                          . 'acting ont his update would create a duplicate request for the Item for the User',
+                    }
+                ]
+              }
+              unless $itemdata;
+        }
+    }
+    elsif ( $can_reserve eq 'damaged' ) {
         return {
             success  => 0,
-            messages => {
-                CANNOT_REQUEST => 1
-            }
+            problems => [
+                {
+                    problem_type    => 'Item Does Not Circulate',
+                    problem_detail  => 'Item is damanged.',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                }
+            ]
+        };
+    }
+    elsif ( $can_reserve eq 'ageRestricted' ) {
+        return {
+            success  => 0,
+            problems => [
+                {
+                    problem_type    => 'User Ineligible To Request This Item',
+                    problem_detail  => 'Item is age restricted.',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                }
+            ]
+        };
+    }
+    elsif ( $can_reserve eq 'tooManyReserves' ) {
+        return {
+            success  => 0,
+            problems => [
+                {
+                    problem_type => 'User Ineligible To Request This Item',
+                    problem_detail =>
+                      'User has placed the maximum requests allowed.',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                }
+            ]
+        };
+    }
+    elsif ( $can_reserve eq 'notReservable' ) {
+        return {
+            success  => 0,
+            problems => [
+                {
+                    problem_type    => 'User Ineligible To Request This Item',
+                    problem_detail  => 'User cannot request this Item.',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                }
+            ]
+        };
+    }
+    elsif ( $can_reserve eq 'cannotReserveFromOtherBranches' ) {
+        return {
+            success  => 0,
+            problems => [
+                {
+                    problem_type    => 'User Ineligible To Request This Item',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                    problem_detail  => 'User cannot request this Item to be '
+                      . 'picked up at specified location.',
+                }
+            ]
+        };
+    }
+    else {    # Generic fallback message
+        return {
+            success  => 0,
+            problems => [
+                {
+                    problem_type    => 'User Ineligible To Request This Item',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                    problem_detail =>
+                      'User cannot request this Item. ILS returned code '
+                      . $can_reserve,
+                }
+            ]
         };
     }
 }
 
 sub cancelrequest {
-    my $self      = shift;
-    my $requestid = shift;
+    my $self       = shift;
+    my $request_id = shift;
 
-    CancelReserve( { reserve_id => $requestid } );
+    CancelReserve( { reserve_id => $request_id } );
 
     return {
-        success  => 1,
-        messages => {
-            request_id => $requestid
-        }
+        success    => 1,
+        request_id => $request_id,
     };
 }
 
@@ -452,7 +682,6 @@ sub acceptitem {
 
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
-    my $result;
 
     $self->userenv();               # set userenvironment
     my ( $biblionumber, $biblioitemnumber );
@@ -537,41 +766,74 @@ sub acceptitem {
                 }
 
                 else {
-                    $result =
-                      { success => 0, messages => { NO_BORROWER => 1 } };
-                    return $result;
+                    return {
+                        success  => 0,
+                        problems => [
+                            {
+                                problem_type    => 'Unknown User',
+                                problem_detail  => 'User is not known.',
+                                problem_element => 'UserIdentifierValue',
+                                problem_value   => $user,
+                            }
+                        ]
+                    };
                 }
             }
             else {
-                $result =
-                  { success => 0, messages => { NO_HOLD_BORROWER => 1 } };
-                return $result;
+                return {
+                    success  => 0,
+                    problems => [
+                        {
+                            problem_type    => 'Unknown User',
+                            problem_detail  => 'User is not known.',
+                            problem_element => 'UserIdentifierValue',
+                            problem_value   => $user,
+                        }
+                    ]
+                };
             }
         }
     }
     else {
         unless ($reserve_id) {
-            $result = { success => 0, messages => { NO_HOLD => 1 } };
-            return $result;
+
+        #FIXME: This message is not technically valid for the AcceptItem message
+        # but I do not see a more appropriate Problem definition available
+            return {
+                problem_type =>
+                  'Check Out Not Allowed - Item Has Outstanding Requests',
+                problem_detail => 'Check out of Item cannot proceed '
+                  . 'because the Item has outstanding requests.',
+                problem_element => 'ItemIdentifierValue',
+                problem_value   => $barcode,
+            };
         }
     }
 
+    # we do this because we are only doing the return to trigger the hold
     my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branchcode, undef, undef );
+    $success = $messages->{'NotIssued'} ? 1 : 0;
+    my $problems =
+      $success
+      ? []
+      : [
+        {
+            problem_type   => 'Temporary Processing Failure',
+            problem_detail => 'Request was placed for user but return of '
+              . 'item showed the item was checked out.',
+            problem_element => 'ItemIdentifierValue',
+            problem_value   => $barcode,
+        }
+      ];
 
-    if ( $messages->{'NotIssued'} ) {
-        $success = 1
-          ; # we do this because we are only doing the return to trigger the reserve
-    }
-
-    $result = {
+    return {
         success    => $success,
-        messages   => $messages,
+        problems   => $problems,
         item_data  => $issue,
         borrower   => $borrower,
-        newbarcode => $barcode
+        newbarcode => $barcode,
     };
-
-    return $result;
 }
+
 1;

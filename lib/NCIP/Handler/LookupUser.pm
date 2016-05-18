@@ -85,12 +85,11 @@ sub handle {
             return $self->render_output(
                 'response.tt',
                 {
+                    message_type => 'LookupUserResponse',
                     from_agency  => $to,
                     to_agency    => $from,
-                    message_type => 'LookupUserResponse',
-
-                    elements => $elements,
-                    user     => $user,
+                    elements     => $elements,
+                    user         => $user,
                 }
             );
         }
@@ -98,11 +97,8 @@ sub handle {
             return $self->render_output(
                 'problem.tt',
                 {
-                    from_agency  => $to,
-                    to_agency    => $from,
                     message_type => 'LookupUserResponse',
-
-                    problems => [
+                    problems     => [
                         {
                             problem_type    => 'Unkown User',
                             problem_detail  => 'User is not known',

@@ -46,40 +46,34 @@ sub handle {
 
         my $branchcode = $to->[0]->textContent() if $to;
 
-        # request the item
-        my $result =
+        my $data =
           $self->ils->request( $userid, $itemid, $biblionumber, $type,
             $branchcode );
 
-        my $vars;
-        my $output;
-
-        if ( $result->{success} ) {
+        if ( $data->{success} ) {
             my $elements = $self->get_user_elements($xmldoc);
-            $output = $self->render_output(
+            return $self->render_output(
                 'response.tt',
                 {
-                    barcode     => $itemid,
                     message_type => 'RequestItemResponse',
-                    elements    => $elements,
-                    messages    => $result->{messages},
+                    from_agency  => $to,
+                    to_agency    => $from,
+                    barcode      => $itemid,
+                    request_id   => $data->{request_id},
+                    elements     => $elements,
                 }
             );
         }
         else {
-            $output = $self->render_output(
+            return $self->render_output(
                 'problem.tt',
                 {
-                    barcode                => $itemid,
-                    message_type            => 'RequestItemResponse',
-                    Problem        => 1,
-                    ProblemType    => $result->{messages},
-                    ProblemElement => 'UniqueItemIdentifier',
+                    message_type => 'RequestItemResponse',
+                    problems     => $data->{problems},
                 }
 
             );
         }
-        return $output;
     }
 }
 

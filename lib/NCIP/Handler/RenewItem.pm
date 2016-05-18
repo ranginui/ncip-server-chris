@@ -26,27 +26,30 @@ sub handle {
         my $root = $xmldoc->documentElement();
         my $itemid =
           $root->findnodes('RenewItem/UniqueItemId/ItemIdentifierValue');
-        my @elements = $root->findnodes('RenewItem/ItemElementType/Value');
 
-        # checkin the item
-        my $renewed = $self->ils->renew($itemid);
-        my $output;
-        my $vars;
-        $vars->{'message_type'} = 'RenewItemResponse';
-        $vars->{'barcode'}     = $itemid;
-        if ( !$renewed->{success} ) {
-            $vars->{'Problem'}        = 1;
-            $vars->{'ProblemType'}    = $renewed->{'messages'};
-            $vars->{'ProblemElement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+        my $data = $self->ils->renew($itemid);
+
+        if ( $data->{success} ) {
+            my @elements = $root->findnodes('RenewItem/ItemElementType/Value');
+            return $self->render_output(
+                'response.tt',
+                {
+                    message_type => 'RenewItemResponse',
+                    barcode      => $itemid,
+                    elements     => \@elements,
+                    data         => $data,
+                }
+            );
         }
         else {
-
-            $vars->{'elements'} = \@elements;
-            $vars->{'renewed'}  = $renewed;
-            $output = $self->render_output( 'response.tt', $vars );
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'RenewItemResponse',
+                    problems     => $data->{problems},
+                }
+            );
         }
-        return $output;
     }
 }
 

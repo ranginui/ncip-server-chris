@@ -37,14 +37,18 @@ sub handle {
     my $self   = shift;
     my $xmldoc = shift;
     if ($xmldoc) {
-        my $vars;
         my ( $from, $to ) = $self->get_agencies($xmldoc);
-        $vars->{'from_agency'}  = $to;
-        $vars->{'to_agency'}    = $from;
-        $vars->{'message_type'} = 'LookupVersionResponse';
-        $vars->{'versions'}    = [NCIP::Const::SUPPORTED_VERSIONS];
-        my $output = $self->render_output( 'response.tt', $vars );
-        return $output;
+
+        return $self->render_output(
+            'response.tt',
+            {
+                from_agency  => $to,
+                to_agency    => $from,
+                message_type => 'LookupVersionResponse',
+                versions     => [NCIP::Const::SUPPORTED_VERSIONS],
+
+            }
+        );
     }
 }
 

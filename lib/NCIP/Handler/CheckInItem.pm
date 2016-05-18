@@ -41,9 +41,8 @@ sub handle {
                     barcode      => $itemid,
                     from_agency  => $to,
                     to_agency    => $from,
-
-                    elements => $self->get_user_elements($xmldoc),
-                    checkin  => $checkin,
+                    elements     => $self->get_user_elements($xmldoc),
+                    checkin      => $checkin,
                 }
             );
         }
@@ -53,8 +52,6 @@ sub handle {
                 {
                     message_type => 'CheckInItemResponse',
                     problems     => $checkin->{problems},
-                    from_agency  => $to,
-                    to_agency    => $from,
 
                 }
             );

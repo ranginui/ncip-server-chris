@@ -40,14 +40,13 @@ sub handle {
             return $self->render_output(
                 'response.tt',
                 {
+                    message_type => 'CheckOutItemResponse',
                     from_agency  => $to,
                     to_agency    => $from,
                     barcode      => $itemid,
-                    message_type => 'CheckOutItemResponse',
                     userid       => $userid,
-
-                    elements => $elements,
-                    datedue  => $data->{date_due},
+                    elements     => $elements,
+                    datedue      => $data->{date_due},
                 }
 
             );

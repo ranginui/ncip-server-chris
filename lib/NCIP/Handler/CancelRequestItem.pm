@@ -28,24 +28,20 @@ sub handle {
         my $xpc       = $self->xpc();
         my $userid    = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
         my $requestid = $xpc->findnodes( '//ns:RequestIdentifierValue', $root );
-        my $result    = $self->ils->cancelrequest($requestid);
-        my $vars;
-        my $output;
-        $vars->{'message_type'} = 'CancelRequestItemResponse';
 
-        if ( !$result->{'success'} ) {
-            $vars->{'Problem'}        = 1;
-            $vars->{'ProblemType'}    = $result->{'messages'};
-            $vars->{'ProblemElement'} = 'UniqueRequestIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
-        }
-        else {
-            my $elements = $self->get_user_elements($xmldoc);
-            $vars->{'messages'} = $result->{'messages'};
-            $vars->{'elements'} = $elements;
-            $output = $self->render_output( 'response.tt', $vars );
-        }
-        return $output;
+        my $data = $self->ils->cancelrequest($requestid);
+
+        my $elements = $self->get_user_elements($xmldoc);
+
+        # NCIP::ILS::Koha::cancelrequest doesn't return errors
+        # no need to deal with them
+        return $self->render_output(
+            'response.tt',
+            {
+                message_type => 'CancelRequestItemResponse',
+                request_id   => $data->{request_id},
+            }
+        );
     }
 }
 

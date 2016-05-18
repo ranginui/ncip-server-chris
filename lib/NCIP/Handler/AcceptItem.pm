@@ -41,8 +41,10 @@ sub handle {
 
         if ( $iteminfo->[0] ) {
 
-# populate a hashref with bibliographic data, we need this to create an item
-# (this could be moved up to Handler.pm eventually as CreateItem will need this also)
+            # populate a hashref with bibliographic data,
+            # we need this to create an item
+            # (this could be moved up to Handler.pm
+            # eventually as CreateItem will need this also)
             my $bibliographic =
               $xpc->find( '//ns:BibliographicDescription', $iteminfo->[0] );
             my $title = $xpc->find( '//ns:Title', $bibliographic->[0] );
@@ -72,7 +74,8 @@ sub handle {
         my $create = 0;
         my ( $from, $to ) = $self->get_agencies($xmldoc);
 
-# Autographics workflow is for an accept item to create the item then do what is in $action
+        # Autographics workflow is for an accept item i
+        # to create the item then do what is in $action
         if ( $from && $from->[0]->textContent() =~ /CPomAG/ ) {
             $create = 1;
         }
@@ -85,32 +88,38 @@ sub handle {
             $pickup_location = $xpc->find( '//ns:PickupLocation', $root );
         }
 
-        my $accepted = $self->ils->acceptitem( $itemid->[0]->textContent(),
+        my $data = $self->ils->acceptitem( $itemid->[0]->textContent(),
             $borrowerid, $action, $create, $itemdata, $pickup_location );
         my $output;
         my $vars;
 
         # we switch these for the templates
         # because we are responding, to becomes from, from becomes to
-        $vars->{'from_agency'} = $to;
-        $vars->{'to_agency'}   = $from;
-
-        $vars->{'message_type'} = 'AcceptItemResponse';
-        $vars->{'barcode'}     = $itemid;
-        if ( !$accepted->{success} ) {
-            $vars->{'Problem'}        = 1;
-            $vars->{'ProblemType'}    = $accepted->{'messages'};
-            $vars->{'ProblemElement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+        if ( !$data->{success} ) {
+            $output = $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'AcceptItemResponse',
+                    problems     => $data->{problems},
+                }
+            );
         }
         else {
             my $elements = $self->get_user_elements($xmldoc);
-            $vars->{'requestagency'} = $requestagency;
-            $vars->{'requestid'}     = $requestid;
-            $vars->{'newbarcode'}    = $accepted->{'newbarcode'} || $itemid;
-            $vars->{'elements'}      = $elements;
-            $vars->{'accept'}        = $accepted;
-            $output = $self->render_output( 'response.tt', $vars );
+            $output = $self->render_output(
+                'response.tt',
+                {
+                    from_agency   => $to,
+                    to_agency     => $from,
+                    message_type  => 'AcceptItemResponse',
+                    barcode       => $itemid,
+                    requestagency => $requestagency,
+                    requestid     => $requestid,
+                    newbarcode    => $data->{'newbarcode'} || $itemid,
+                    elements      => $elements,
+                    accept        => $data,
+                }
+            );
         }
         return $output;
     }
