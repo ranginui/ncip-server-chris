@@ -10,39 +10,63 @@ RequestedItem
 -%]
 
 <UserOptionalFields>
-    [% FOREACH element IN elements %]
-        [% IF element.textContent == 'User Address Information' %]
+    [%- FOREACH element IN elements -%]
+        [%- IF element.textContent == 'User Address Information' -%]
             <UserAddressInformation>
                 <UserAddressRoleType>Primary Address</UserAddressRoleType>
                 <PhysicalAddress>
                     <StructuredAddress>
                         <Line1>[% user.userdata.streetnumber | xml %] [% user.userdata.address | xml %]</Line1>
 
-                        [% IF user.userdata.address2 %]
+                        [%- IF user.userdata.address2 -%]
                             <Line2>[% user.userdata.address2 | xml %]</Line2>
-                        [% END %]
+                        [%- END -%]
 
-                        [% IF user.userdata.city %]
+                        [%- IF user.userdata.city -%]
                             <Locality>[% user.userdata.city | xml %]</Locality>
-                        [% END %]
+                        [%- END -%]
 
-                        [% IF user.userdata.state %]
+                        [%- IF user.userdata.state -%]
                             <Region>[% user.userdata.state | xml %]</Region>
-                        [% END %]
+                        [%- END -%]
 
-                        [% IF user.userdata.zipcode %]
+                        [%- IF user.userdata.zipcode -%]
                             <PostalCode>[% user.userdata.zipcode | xml %]</PostalCode>
-                        [% END %]
+                        [%- END -%]
 
-                        [% IF user.userdata.country %]
+                        [%- IF user.userdata.country -%]
                             <Country>[% user.userdata.country | xml %]</Country>
-                        [% END %]
+                        [%- END -%]
                     </StructuredAddress>
+                    <PhysicalAddressType>Postal Address</PhysicalAddressType>
                 </PhysicalAddress>
-            </UserAddressInformation>
-        [% END %]
 
-        [% IF element.textContent == 'Name Information' %]
+                [%- IF user.userdata.email -%]
+                    <ElectronicAddress>
+                        <ElectronicAddressType>mailto</ElectronicAddressType>
+                        <ElectronicAddressData>[% user.userdata.email %]</ElectronicAddressData>
+                    </ElectronicAddress>
+                [%- END -%]
+
+                [%- IF user.userdata.phone -%]
+                    <ElectronicAddress>
+                        <UserAddressRoleType>Home</UserAddressRoleType>
+                        <ElectronicAddressType>tel</ElectronicAddressType>
+                        <ElectronicAddressData>[% user.userdata.phone %]</ElectronicAddressData>
+                    </ElectronicAddress>
+                [%- END -%]
+
+                [%- IF user.userdata.phonepro || user.userdata.mobile -%]
+                    <ElectronicAddress>
+                        <UserAddressRoleType>Mobile</UserAddressRoleType>
+                        <ElectronicAddressType>tel</ElectronicAddressType>
+                        <ElectronicAddressData>[% user.userdata.phonepro || user.userdata.mobile %]</ElectronicAddressData>
+                    </ElectronicAddress>
+                [%- END -%]
+            </UserAddressInformation>
+        [%- END -%]
+
+        [%- IF element.textContent == 'Name Information' -%]
             <NameInformation>
                 <PersonalNameInformation>
                     <StructuredPersonalUserName>
@@ -51,9 +75,9 @@ RequestedItem
                     </StructuredPersonalUserName>
                 </PersonalNameInformation>
             </NameInformation>
-        [% END %]
+        [%- END -%]
 
-        [% IF element.textContent == 'User Privilege' %]
+        [%- IF element.textContent == 'User Privilege' -%]
             <UserPrivilege>
                 <AgencyUserPrivilegeType>LIBRARY</AgencyUserPrivilegeType>
                 <UserPrivilegeStatus>
@@ -71,21 +95,21 @@ RequestedItem
             <UserPrivilege>
                 <AgencyUserPrivilegeType>STATUS</AgencyUserPrivilegeType>
                 <UserPrivilegeStatus>
-                        [%- FILTER collapse -%]
-                            <UserPrivilegeStatusType>
-                                [%- FILTER trim -%]
-                                    [%- IF user.userdata.restricted < 0 -%]
-                                        Delinquent
-                                    [%- ELSIF user.userdata.restricted > 0 -%]
-                                        Restricted
-                                    [%- ELSE -%]
-                                        Ok
-                                    [%- END -%]
+                    [%- FILTER collapse -%]
+                        <UserPrivilegeStatusType>
+                            [%- FILTER trim -%]
+                                [%- IF user.userdata.restricted < 0 -%]
+                                    Delinquent
+                                [%- ELSIF user.userdata.restricted > 0 -%]
+                                    Restricted
+                                [%- ELSE -%]
+                                    Ok
                                 [%- END -%]
-                            </UserPrivilegeStatusType>
-                        [%- END -%]
+                            [%- END -%]
+                        </UserPrivilegeStatusType>
+                    [%- END -%]
                 </UserPrivilegeStatus>
             </UserPrivilege>
-        [% END %]
-    [% END %]
+        [%- END -%]
+    [%- END -%]
 </UserOptionalFields>
