@@ -32,6 +32,7 @@ sub handle {
 
         my $xpc = $self->xpc();
 
+        my $pin;
         unless ($user_id) {
 
             # We may get a password, username combo instead of userid
@@ -41,7 +42,6 @@ sub handle {
               $xpc->findnodes( '//ns:AuthenticationInput', $root );
 
             my $barcode;
-            my $pin;    #FIXME: we do nothing with pin authentication
 
             foreach my $node (@authtypes) {
                 my $class =
@@ -70,6 +70,49 @@ sub handle {
 
         my $user = NCIP::User->new( { userid => $user_id, ils => $self->ils } );
         $user->initialise();
+
+        if ($pin) {
+            if ( $user->is_valid() ) {
+                my $authenticated = $user->authenticate( { pin => $pin } );
+
+                unless ($authenticated) {    # User is valid, password is not
+                    return $self->render_output(
+                        'problem.tt',
+                        {
+                            message_type => 'LookupUserResponse',
+                            problems     => [
+                                {
+                                    problem_type =>
+                                      'User Authentication Failed',
+                                    problem_detail =>
+                                      'Barcode Id or Password are invalid',
+                                    problem_element => 'Password',
+                                    problem_value   => $pin,
+                                }
+                            ]
+                        }
+                    );
+                }
+            }
+            else {    # User is invalid
+                return $self->render_output(
+                    'problem.tt',
+                    {
+                        message_type => 'LookupUserResponse',
+                        problems     => [
+                            {
+                                problem_type => 'User Authentication Failed',
+                                problem_detail =>
+                                  'Barcode Id or Password are invalid',
+                                problem_element => 'Barcode Id',
+                                problem_value   => $user_id,
+                            }
+                        ]
+                    }
+                );
+            }
+        }
+
         my $vars;
 
         #  this bit should be at a lower level
@@ -80,7 +123,7 @@ sub handle {
 
         # if we have blank user, we need to return that
         # and can skip looking for elementtypes
-        if ( $user->userdata->{'borrowernumber'} ) {
+        if ( $user->is_valid() ) {
             my $elements = $self->get_user_elements($xmldoc);
             return $self->render_output(
                 'response.tt',

@@ -21,6 +21,9 @@ use Object::Tiny qw{ name };
 use MARC::Record;
 use MARC::Field;
 
+use C4::Auth qw{
+  checkpw_hash
+};
 use C4::Members qw{
   GetMemberDetails
   IsMemberBlocked
@@ -93,6 +96,8 @@ sub userdata {
     my $self     = shift;
     my $userid   = shift;
     my $userdata = GetMemberDetails( undef, $userid );
+
+    return unless $userdata;
 
     my ( $block_status, $count ) =
       IsMemberBlocked( $userdata->{borrowernumber} );
@@ -834,6 +839,17 @@ sub acceptitem {
         borrower   => $borrower,
         newbarcode => $barcode,
     };
+}
+
+sub authenticate_patron {
+    my ( $self, $params ) = @_;
+
+    my $ils_user = $params->{ils_user};
+    my $pin      = $params->{pin};
+
+    my $hash = $ils_user->userdata->{password};
+
+    return checkpw_hash( $pin, $hash );
 }
 
 1;
