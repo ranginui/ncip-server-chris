@@ -24,7 +24,7 @@ RequestedItem
 
         [%- IF element.textContent == 'User Address Information' -%]
             <UserAddressInformation>
-                <UserAddressRoleType>Primary Address</UserAddressRoleType>
+                <UserAddressRoleType>Home</UserAddressRoleType>
                 <PhysicalAddress>
                     <StructuredAddress>
                         <Line1>[% user.userdata.streetnumber | xml %] [% user.userdata.address | xml %]</Line1>
@@ -55,6 +55,7 @@ RequestedItem
 
             [%- IF user.userdata.email -%]
                 <UserAddressInformation>
+                    <UserAddressRoleType>Home</UserAddressRoleType>
                     <ElectronicAddress>
                         <ElectronicAddressType>mailto</ElectronicAddressType>
                         <ElectronicAddressData>[% user.userdata.email %]</ElectronicAddressData>
@@ -64,8 +65,8 @@ RequestedItem
 
             [%- IF user.userdata.phone -%]
                 <UserAddressInformation>
+                    <UserAddressRoleType>Home</UserAddressRoleType>
                     <ElectronicAddress>
-                        <UserAddressRoleType>Home</UserAddressRoleType>
                         <ElectronicAddressType>tel</ElectronicAddressType>
                         <ElectronicAddressData>[% user.userdata.phone %]</ElectronicAddressData>
                     </ElectronicAddress>
@@ -74,8 +75,8 @@ RequestedItem
 
             [%- IF user.userdata.phonepro || user.userdata.mobile -%]
                 <UserAddressInformation>
+                    <UserAddressRoleType>Mobile</UserAddressRoleType>
                     <ElectronicAddress>
-                        <UserAddressRoleType>Mobile</UserAddressRoleType>
                         <ElectronicAddressType>tel</ElectronicAddressType>
                         <ElectronicAddressData>[% user.userdata.phonepro || user.userdata.mobile %]</ElectronicAddressData>
                     </ElectronicAddress>
