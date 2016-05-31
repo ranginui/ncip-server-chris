@@ -24,6 +24,9 @@ use MARC::Field;
 use C4::Auth qw{
   checkpw_hash
 };
+use C4::Branch qw{
+  GetBranchesLoop
+};
 use C4::Members qw{
   GetMemberDetails
   IsMemberBlocked
@@ -688,6 +691,23 @@ sub acceptitem {
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
 
+    unless ( $branchcode ) {
+        my $branches = GetBranchesLoop();
+        if ( @$branches > 1 ) {
+            return {
+                success  => 0,
+                problems => [
+                    {
+                        problem_type    => 'Pickup Library Not Specified',
+                        problem_detail  => 'Pickup library not specified in AcceptItem message.',
+                    }
+                ]
+            };
+        } else {
+            $branchcode = $branches->[0]->{branchcode};
+        }
+    }
+
     $self->userenv();               # set userenvironment
     my ( $biblionumber, $biblioitemnumber );
     if ($create) {
@@ -731,7 +751,13 @@ sub acceptitem {
         ( $biblionumber, $biblioitemnumber ) =
           AddBiblio( $record, $frameworkcode );
         my $itemnumber;
+
+        # If the barcode already exists, just make up a new one
         $barcode = 'ILL' . $biblionumber . time unless $barcode;
+        while ( GetItem( undef, $barcode ) ) {
+            $barcode = 'ILL' . $biblionumber . time;
+        }
+
         my $item = {
             'barcode'       => $barcode,
             'holdingbranch' => $branchcode,
@@ -748,7 +774,7 @@ sub acceptitem {
       GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
 
     # now we have to check the requested action
-    if ( $action =~ /^Hold For Pickup And Notify/ ) {
+    if ( $action =~ /^Hold For Pickup/ ) {
         unless ($reserve_id) {
 
             # no reserve, place one

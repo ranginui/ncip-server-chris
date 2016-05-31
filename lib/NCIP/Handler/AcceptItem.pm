@@ -79,6 +79,7 @@ sub handle {
         if ( $from && $from->[0]->textContent() =~ /CPomAG/ ) {
             $create = 1;
         }
+        $create = 1; # Same for Relais, just always create for now
 
         my $pickup_location;
         if ( $to && $to->[0] ) {
