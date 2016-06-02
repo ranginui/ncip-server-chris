@@ -1,0 +1,96 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          ncip
+# Required-Start:    mysql
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start NCIP server at boot time
+# Description:       Enable NCIP server
+### END INIT INFO
+
+# Source function library.
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+#HANDLER="gazelle" # gazelle or starman
+HANDLER="starman"
+
+ENVIRONMENT="development"
+#ENVIRONMENT="deployment"
+
+PORT="3001"
+
+WORKERS="2"
+REQUESTS="50000"
+
+HOME_DIR="/home/koha"
+MYAPP="ncip-server"
+MYAPP_PATH="$HOME_DIR/ncip-server"
+PIDFILE="$HOME_DIR/ncip-server.pid"
+STATUSFILE="$HOME_DIR/ncip-server.status"
+ERRORLOG="$HOME_DIR/ncip-server.log"
+APP_PL="$MYAPP_PATH/bin/ncip_dancing.pl"
+KOHA_LIB="/home/koha/kohaclone"
+
+STARMAN="/usr/bin/starman"
+PLACKUP="/usr/bin/plackup"
+DAEMON="/usr/local/bin/start_server"
+
+DAEMON_OPTS="--daemonize --port $PORT --pid-file $PIDFILE --status-file $STATUSFILE --log-file $ERRORLOG -- "
+
+STARMAN_OPTS="$PLACKUP -I $MYAPP_PATH/lib -I $KOHA_LIB -E $ENVIRONMENT -s Starman --workers $WORKERS --max-requests $REQUESTS -a $APP_PL"
+GAZELLE_OPTS="$PLACKUP -I $MYAPP_PATH/lib -I $KOHA_LIB -E $ENVIRONMENT -s Gazelle --workers $WORKERS --max-reqs-per-child $REQUESTS -a $APP_PL"
+
+if [ $HANDLER == 'starman' ]
+        then
+                HANDLER_OPTS=$STARMAN_OPTS
+elif [ $HANDLER == 'gazelle' ]
+        then
+                HANDLER_OPTS=$GAZELLE_OPTS
+else
+        echo -n "Unkown handler!"
+        exit
+fi
+
+START_NCIP="$DAEMON $DAEMON_OPTS $HANDLER_OPTS"
+
+start() {
+        echo -n "Starting NCIP... "
+
+        eval $START_NCIP
+        RETVAL=$?
+
+        echo -n "$START_NCIP"
+
+        echo [ $RETVAL = 0 ]
+        return $RETVAL
+}
+
+restart() {
+        echo -n "Restarting NCIP server... "
+        eval $DAEMON --restart $DAEMON_OPTS
+}
+
+stop() {
+        echo -n "Stopping NCIP server... "
+        eval $DAEMON --stop $DAEMON_OPTS
+}
+
+# See how we were called.
+case "$1" in
+  start)
+        start
+        ;;
+  restart)
+        restart
+         ;;
+  stop)
+        stop
+        ;;
+  *)
+        echo $"Usage: libki {start|restart|stop|kill}"
+        exit 1
+esac
+
+exit $RETVAL
