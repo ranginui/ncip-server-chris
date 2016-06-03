@@ -10,6 +10,8 @@
 # Description:       Enable NCIP server
 ### END INIT INFO
 
+export KOHA_CONF="/path/to/koha-conf.xml"
+
 # Source function library.
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
