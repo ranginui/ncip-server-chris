@@ -235,7 +235,7 @@ sub checkout {
                 @problems,
                 {
                     problem_type    => 'Invalid Date',
-                    problem_detail  => 'Item is not known.',
+                    problem_detail  => 'Date due is not valid.',
                     problem_element => 'DesiredDateDue',
                     problem_value   => $date_due,
                 }

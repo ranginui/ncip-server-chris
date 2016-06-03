@@ -53,6 +53,8 @@ use Modern::Perl;
 use Object::Tiny qw{ type namespace ils templates };
 use Module::Load;
 use Template;
+use FindBin;
+use Cwd qw/realpath/;
 
 =head2 new()
 
@@ -66,11 +68,12 @@ sub new {
     my $params   = shift;
     my $subclass = __PACKAGE__ . "::" . $params->{type};
     load $subclass || die "Can't load module $subclass";
+    my $appdir = realpath( "$FindBin::Bin/..");
     my $self = bless {
         type      => $params->{type},
         namespace => $params->{namespace},
         ils       => $params->{ils},
-        templates => $params->{template_dir}
+        templates => "$appdir/templates",
     }, $subclass;
     return $self;
 }
