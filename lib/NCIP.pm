@@ -141,7 +141,13 @@ sub parse_request {
       $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
     if ($nodes) {
         my @childnodes = $nodes->[0]->childNodes();
-        if ( $childnodes[1] ) {
+        # The message tag ( e.g. <LookupUser> ) location changes based on line breaks
+        # so we need to check the first and second nodes to see where it is.
+        # Weird, right?
+        if ( $childnodes[0] && $childnodes[0]->localname() ) {
+            return $childnodes[0]->localname();
+        }
+        elsif ( $childnodes[1] && $childnodes[1]->localname() ) {
             return $childnodes[1]->localname();
         }
         else {
