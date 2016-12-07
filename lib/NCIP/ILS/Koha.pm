@@ -380,6 +380,8 @@ sub renew {
     my ( $ok, $error ) =
       CanBookBeRenewed( $borrower->{borrowernumber}, $item->{itemnumber} );
 
+    $error //= q{};
+
     return {
         success  => 0,
         problems => [
@@ -423,7 +425,8 @@ sub renew {
       }
       if $error;    # Generic message for all other reasons
 
-    my $datedue = AddRenewal( $barcode, $borrower->{'borrowernumber'} );
+    my $datedue = AddRenewal( $borrower->{borrowernumber}, $item->{itemnumber} );
+
     return {
         success => 1,
         datedue => $datedue

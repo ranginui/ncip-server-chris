@@ -24,10 +24,11 @@ sub handle {
     my $xmldoc = shift;
     if ($xmldoc) {
         my $root = $xmldoc->documentElement();
-        my $itemid =
-          $root->findnodes('RenewItem/UniqueItemId/ItemIdentifierValue');
+        my $xpc  = $self->xpc();
+        my $userid   = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
+        my $itemid   = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
 
-        my $data = $self->ils->renew($itemid);
+        my $data = $self->ils->renew( $itemid, $userid );
 
         if ( $data->{success} ) {
             my @elements = $root->findnodes('RenewItem/ItemElementType/Value');
@@ -36,6 +37,7 @@ sub handle {
                 {
                     message_type => 'RenewItemResponse',
                     barcode      => $itemid,
+                    userid       => $userid,
                     elements     => \@elements,
                     data         => $data,
                 }
