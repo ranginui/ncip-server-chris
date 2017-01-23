@@ -1,5 +1,3 @@
-[% INCLUDE 'includes/header.inc' %]
-
+[% INCLUDE 'includes/header.inc' -%]
 [% content %]
-
 [% INCLUDE 'includes/footer.inc' %]

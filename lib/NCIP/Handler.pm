@@ -51,6 +51,7 @@ package NCIP::Handler;
 
 use Modern::Perl;
 use Object::Tiny qw{ type namespace ils templates };
+use XML::Tidy::Tiny qw(xml_tidy);
 use Module::Load;
 use Template;
 use FindBin;
@@ -73,6 +74,7 @@ sub new {
         type      => $params->{type},
         namespace => $params->{namespace},
         ils       => $params->{ils},
+        config    => $params->{config},
         templates => "$appdir/templates",
     }, $subclass;
     return $self;
@@ -171,6 +173,8 @@ sub render_output {
     my $output;
     $template->process( $templatename, $vars, \$output )
       || die $template->error();
+    $output = xml_tidy( $output );
+    ##warn "XML RESPONSE:\n$output";
     return $output;
 }
 1;

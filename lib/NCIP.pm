@@ -55,6 +55,7 @@ sub new {
 sub process_request {
     my $self           = shift;
     my $xml            = shift;
+    my $config         = shift;
     my ($request_type) = $self->handle_initiation($xml);
     unless ($request_type) {
 
@@ -69,6 +70,7 @@ sub process_request {
             namespace    => $self->namespace(),
             type         => $request_type,
             ils          => $self->ils,
+            config       => $config,
             template_dir => $self->config->('NCIP.templates.value'),
         }
     );
@@ -88,6 +90,9 @@ sub handle_initiation {
     if ($@) {
         $log->info("Invalid xml we can not parse it ");
     }
+
+    ##warn "INCOMING XML:\n" . xml_tidy($xml);
+
     if ($dom) {
 
         # should check validity with validate at this point

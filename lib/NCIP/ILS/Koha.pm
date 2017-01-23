@@ -690,6 +690,7 @@ sub acceptitem {
     my $create  = shift;
     my $iteminfo   = shift;
     my $branchcode = shift;
+    my $frameworkcode  = shift || 'FA';
 
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
@@ -715,7 +716,6 @@ sub acceptitem {
     my ( $biblionumber, $biblioitemnumber );
     if ($create) {
         my $record;
-        my $frameworkcode = 'FA';    # we should get this from config
 
         # we must make the item first
         # Autographics workflow is to make the item each time
