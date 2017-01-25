@@ -32,7 +32,7 @@ sub handle {
         my $requestid  = $xpc->find( '//ns:RequestIdentifierValue', $request );
         my $borrowerid = $xpc->find( '//ns:UserIdentifierValue',    $root );
 
-        my $framework = $self->{config}->{koha}->{framework};
+        my $config = $self->{config}->{koha};
 
         if ($action) {
             $action = $action->textContent();
@@ -92,7 +92,7 @@ sub handle {
         }
 
         my $data = $self->ils->acceptitem( $itemid->[0]->textContent(),
-            $borrowerid, $action, $create, $itemdata, $pickup_location, $framework );
+            $borrowerid, $action, $create, $itemdata, $pickup_location, $config );
         my $output;
         my $vars;
 

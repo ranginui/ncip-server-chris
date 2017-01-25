@@ -690,10 +690,13 @@ sub acceptitem {
     my $create  = shift;
     my $iteminfo   = shift;
     my $branchcode = shift;
-    my $frameworkcode  = shift || 'FA';
+    my $config = shift;
 
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
+
+    my $frameworkcode   = $config->{framework}       || 'FA';
+    my $item_branchcode = $config->{item_branchcode} || $branchcode;
 
     my ( $field, $subfield ) = GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
     my $fieldslib = C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
@@ -770,8 +773,8 @@ sub acceptitem {
 
         my $item = {
             'barcode'       => $barcode,
-            'holdingbranch' => $branchcode,
-            'homebranch'    => $branchcode,
+            'holdingbranch' => $item_branchcode,
+            'homebranch'    => $item_branchcode,
             'itype'         => $itemtype,
         };
         ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode ) =

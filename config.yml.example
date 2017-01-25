@@ -34,3 +34,4 @@ default_mime_type: "application/xml; charset='utf-8'"
 
 koha:
   framework: 'FA'
+  item_branchcode: 'MPL'
