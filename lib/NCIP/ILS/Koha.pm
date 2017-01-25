@@ -695,6 +695,10 @@ sub acceptitem {
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
 
+    my ( $field, $subfield ) = GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
+    my $fieldslib = C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
+    my $itemtype = $fieldslib->{$field}{$subfield}{defaultvalue};
+
     unless ( $branchcode ) {
         my $branches = GetBranchesLoop();
         if ( @$branches > 1 ) {
@@ -746,7 +750,10 @@ sub acceptitem {
                 ),
                 MARC::Field->new(
                     '942', '1', '0', 'c' => $iteminfo->{mediumtype}
-                )
+                ),
+                MARC::Field->new(
+                    $field, '', '', $subfield => $itemtype
+                ),
             );
 
         }
@@ -764,9 +771,10 @@ sub acceptitem {
         my $item = {
             'barcode'       => $barcode,
             'holdingbranch' => $branchcode,
-            'homebranch'    => $branchcode
+            'homebranch'    => $branchcode,
+            'itype'         => $itemtype,
         };
-        ( $biblionumber, $biblioitemnumber, $itemnumber ) =
+        ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode ) =
           AddItem( $item, $biblionumber );
     }
 
