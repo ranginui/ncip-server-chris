@@ -181,7 +181,9 @@ sub render_output {
 
     $ncip_version ||= 2; # Default to assume NCIP version 2
 
-    my $include_path = $ncip_version && $ncip_version
+    $vars->{ncip_version} = $ncip_version;
+    warn Data::Dumper::Dumper( $vars );
+
     my $template = Template->new(
         {
             INCLUDE_PATH => $self->templates,
@@ -189,7 +191,7 @@ sub render_output {
         }
     ) || die Template->error();
     my $output;
-    $template->process( $template_name, $vars, \$output )
+    $template->process( "v$ncip_version/$template_name", $vars, \$output )
       || die $template->error();
     $output = xml_tidy($output);
     ##warn "XML RESPONSE:\n$output";

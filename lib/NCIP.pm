@@ -58,6 +58,7 @@ sub process_request {
     my $config = shift;
 
     my ( $request_type, $ncip_version ) = $self->handle_initiation($xml);
+    $self->{ncip_protocol_version} = $ncip_version;
 
     unless ($request_type) {
 
