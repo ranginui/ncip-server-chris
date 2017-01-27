@@ -117,8 +117,6 @@ sub handle {
         my $output;
         my $vars;
 
-        warn "ILS acceptitem response: " . Data::Dumper::Dumper( $data );
-
         # we switch these for the templates
         # because we are responding, to becomes from, from becomes to
         if ( !$data->{success} ) {
@@ -144,7 +142,8 @@ sub handle {
                     newbarcode     => $data->{'newbarcode'} || $itemid,
                     elements       => $elements,
                     accept         => $data,
-                }
+                },
+                $self->{ncip_version},
             );
         }
         return $output;
