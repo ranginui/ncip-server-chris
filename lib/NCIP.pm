@@ -57,7 +57,7 @@ sub process_request {
     my $xml    = shift;
     my $config = shift;
 
-    my ($request_type) = $self->handle_initiation($xml);
+    my ( $request_type, $ncip_version ) = $self->handle_initiation($xml);
 
     unless ($request_type) {
 
@@ -74,6 +74,7 @@ sub process_request {
             type         => $request_type,
             ils          => $self->ils,
             config       => $config,
+            ncip_version => $ncip_version,
             template_dir => $self->config->('NCIP.templates.value'),
         }
     );
@@ -121,7 +122,7 @@ sub handle_initiation {
         # do whatever we should do to initiate, then hand back request_type
         if ($request_type) {
             $self->{xmldoc} = $dom;
-            return $request_type;
+            return ( $request_type, $ncip_version );
         }
     }
     else {

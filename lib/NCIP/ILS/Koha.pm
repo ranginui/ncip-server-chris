@@ -425,7 +425,8 @@ sub renew {
       }
       if $error;    # Generic message for all other reasons
 
-    my $datedue = AddRenewal( $borrower->{borrowernumber}, $item->{itemnumber} );
+    my $datedue =
+      AddRenewal( $borrower->{borrowernumber}, $item->{itemnumber} );
 
     return {
         success => 1,
@@ -688,35 +689,47 @@ sub acceptitem {
     my $user    = shift;
     my $action  = shift;
     my $create  = shift;
-    my $iteminfo   = shift;
-    my $branchcode = shift;
-    my $frameworkcode  = shift || 'FA';
+    my $iteminfo      = shift;
+    my $branchcode    = shift;
+    my $frameworkcode = shift || 'FA';
+
+    warn "BARCODE: $barcode";
+    warn "USER: $user";
+    warn "ACTION: $action";
+    warn "CREATE: $create";
+    warn "INFO: $iteminfo";
+    warn "BRANCHCODE: $branchcode";
+    warn "FRAMEWORK: $frameworkcode";
 
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
 
-    my ( $field, $subfield ) = GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
-    my $fieldslib = C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
+    my ( $field, $subfield ) =
+      GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
+    my $fieldslib =
+      C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
     my $itemtype = $fieldslib->{$field}{$subfield}{defaultvalue};
 
-    unless ( $branchcode ) {
+    unless ($branchcode) {
         my $branches = GetBranchesLoop();
         if ( @$branches > 1 ) {
             return {
                 success  => 0,
                 problems => [
                     {
-                        problem_type    => 'Pickup Library Not Specified',
-                        problem_detail  => 'Pickup library not specified in AcceptItem message.',
+                        problem_type => 'Pickup Library Not Specified',
+                        problem_detail =>
+                          'Pickup library not specified in AcceptItem message.',
                     }
                 ]
             };
-        } else {
+        }
+        else {
             $branchcode = $branches->[0]->{branchcode};
         }
     }
 
-    $self->userenv();               # set userenvironment
+    $self->userenv();    # set userenvironment
     my ( $biblionumber, $biblioitemnumber );
     if ($create) {
         my $record;
@@ -767,6 +780,7 @@ sub acceptitem {
         while ( GetItem( undef, $barcode ) ) {
             $barcode = 'ILL' . $biblionumber . time;
         }
+        warn "BARCODE: $barcode";
 
         my $item = {
             'barcode'       => $barcode,
@@ -774,8 +788,8 @@ sub acceptitem {
             'homebranch'    => $branchcode,
             'itype'         => $itemtype,
         };
-        ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode ) =
-          AddItem( $item, $biblionumber );
+        ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode )
+          = AddItem( $item, $biblionumber );
     }
 
     # find hold and get branch for that, check in there
@@ -835,6 +849,9 @@ sub acceptitem {
                 };
             }
         }
+    }
+    elsif ( $action =~ /^Circulate/ ) {
+        return $self->checkout( $user, $barcode );
     }
     else {
         unless ($reserve_id) {
