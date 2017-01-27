@@ -117,7 +117,8 @@ sub handle {
                 {
                     message_type => 'AcceptItemResponse',
                     problems     => $data->{problems},
-                }
+                },
+                $self->{ncip_version},
             );
         }
         else {
@@ -134,7 +135,8 @@ sub handle {
                     newbarcode     => $data->{'newbarcode'} || $itemid,
                     elements       => $elements,
                     accept         => $data,
-                }
+                },
+                $self->{ncip_version},
             );
         }
         return $output;
