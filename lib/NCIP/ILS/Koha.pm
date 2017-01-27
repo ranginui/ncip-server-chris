@@ -693,14 +693,6 @@ sub acceptitem {
     my $branchcode    = shift;
     my $frameworkcode = shift || 'FA';
 
-    warn "BARCODE: $barcode";
-    warn "USER: $user";
-    warn "ACTION: $action";
-    warn "CREATE: $create";
-    warn "INFO: $iteminfo";
-    warn "BRANCHCODE: $branchcode";
-    warn "FRAMEWORK: $frameworkcode";
-
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
 
@@ -780,7 +772,6 @@ sub acceptitem {
         while ( GetItem( undef, $barcode ) ) {
             $barcode = 'ILL' . $biblionumber . time;
         }
-        warn "BARCODE: $barcode";
 
         my $item = {
             'barcode'       => $barcode,

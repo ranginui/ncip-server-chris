@@ -64,7 +64,6 @@ sub process_request {
 
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
-        warn "We can't find request type";
         my $output = $self->_error("We can't find request type");
         return $output;
     }
@@ -97,28 +96,22 @@ sub handle_initiation {
         $log->info("Invalid xml we can not parse it ");
     }
 
-    warn "INCOMING XML:\n" . xml_tidy($xml);
     $log->info( sub { "INCOMING XML:\n" . xml_tidy($xml) } );
 
     if ($dom) {
 
         # should check validity with validate at this point
-        warn "STRICT: $strict_validation";
-        warn "VALID: " . $self->validate($dom);
         if ( $strict_validation && !$self->validate($dom) ) {
 
             # we want strict validation, bail out if dom doesnt validate
             #            warn " Not valid xml";
 
             # throw/log error
-            warn "INVALID XML DOM!";
             $log->error("INVALID XML DOM!");
 
             return;
         }
         my ( $request_type, $ncip_version ) = $self->parse_request($dom);
-        warn "TYPE: $request_type";
-        warn "NCIP VERSION: $ncip_version";
 
         # do whatever we should do to initiate, then hand back request_type
         if ($request_type) {
@@ -127,7 +120,6 @@ sub handle_initiation {
         }
     }
     else {
-        warn "We have no DOM";
         $log->info("We have no DOM");
 
         return;
@@ -143,7 +135,6 @@ sub validate {
         $dom->validate();
     }
     catch {
-        warn "Bad xml, caught error: $_";
         return;
     };
 
@@ -173,12 +164,10 @@ sub parse_request {
             return ( $childnodes[1]->localname(), $version );
         }
         else {
-            warn "Got a node, but no child node";
             return;
         }
     }
     else {
-        warn "Invalid XML";
         return;
     }
     return;

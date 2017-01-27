@@ -30,7 +30,6 @@ sub handle {
             $user_id, $item_info );
 
         if ( $self->{ncip_version} == 1 ) {
-            warn "USING NCIP v1";
             $itemid = $xpc->find( '//ItemIdentifierValue', $root );
             ($action) = $xpc->find( '//RequestedActionType//Value', $root );
             $request_agency =
@@ -41,7 +40,6 @@ sub handle {
             $item_info = $xpc->find( '//ItemOptionalFields', $root );
         }
         else {    # $version == 2
-            warn "USING NCIP v2";
             $itemid = $xpc->find( '//ns:ItemIdentifierValue', $root );
             ($action)  = $xpc->findnodes( '//ns:RequestedActionType', $root );
             ($request) = $xpc->findnodes( '//ns:RequestId',           $root );
@@ -55,11 +53,6 @@ sub handle {
 
             $item_info = $xpc->find( '//ns:ItemOptionalFields', $root );
         }
-        warn "ITEM ID: $itemid";
-        warn "ACTION: $action";
-        warn "REQUEST AGENCY: $request_agency";
-        warn "REQUEST ID: $request_id";
-        warn "PATRON ID: $user_id";
 
         my $framework = $self->{config}->{koha}->{framework};
 
@@ -94,7 +87,6 @@ sub handle {
                 $itemdata->{mediumtype} = $medium->[0]->textContent();
             }
         }
-        warn "ITEMDATA: " . Data::Dumper::Dumper($itemdata);
 
         # accept the item
         my ( $from, $to ) =
@@ -116,8 +108,6 @@ sub handle {
             $framework );
         my $output;
         my $vars;
-
-        warn "ILS acceptitem response: " . Data::Dumper::Dumper( $data );
 
         # we switch these for the templates
         # because we are responding, to becomes from, from becomes to

@@ -170,9 +170,6 @@ sub get_agencies {
         $to   = $xpc->find( 'ns://ToAgencyId',   $root );
     }
 
-    warn "FROM: $from";
-    warn "TO: $to";
-
     return ( $from, $to );
 }
 
@@ -182,7 +179,6 @@ sub render_output {
     $ncip_version ||= 2; # Default to assume NCIP version 2
 
     $vars->{ncip_version} = $ncip_version;
-    warn Data::Dumper::Dumper( $vars );
 
     my $template = Template->new(
         {
