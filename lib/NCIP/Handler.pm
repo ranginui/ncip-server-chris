@@ -181,11 +181,11 @@ sub render_output {
 
     $ncip_version ||= 2; # Default to assume NCIP version 2
 
-    my $include_path = $self->templates . '/' . "NCIPv" . $ncip_version;
+    my $include_path = $ncip_version && $ncip_version
     my $template = Template->new(
         {
-            INCLUDE_PATH => $include_path,
-            POST_CHOMP   => 1,
+            INCLUDE_PATH => $self->templates,
+            POST_CHOMP   => 1
         }
     ) || die Template->error();
     my $output;
