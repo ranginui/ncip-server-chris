@@ -328,7 +328,7 @@ sub checkout {
             my $issue = AddIssue( $borrower, $barcode, $date_due );
             $date_due = $issue->date_due();
             $date_due =~ s/ /T/;
-            return { success => 1, date_due => $date_due };
+            return { success => 1, date_due => $date_due, newbarcode => $barcode };
         }
     }
     else {
