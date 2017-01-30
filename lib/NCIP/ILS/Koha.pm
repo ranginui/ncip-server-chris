@@ -790,7 +790,7 @@ sub acceptitem {
       GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
 
     # now we have to check the requested action
-    if ( $action =~ /^Hold For Pickup/ ) {
+    if ( $action =~ /^Hold For Pickup/ || $action =~ /^Circulate/ ) {
         unless ($reserve_id) {
 
             # no reserve, place one
@@ -840,9 +840,6 @@ sub acceptitem {
                 };
             }
         }
-    }
-    elsif ( $action =~ /^Circulate/ ) {
-        return $self->checkout( $user, $barcode );
     }
     else {
         unless ($reserve_id) {
