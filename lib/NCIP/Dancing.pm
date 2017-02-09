@@ -17,7 +17,7 @@ any [ 'get', 'post' ] => '/' => sub {
     }
     my $content = $ncip->process_request($xml, config);
 
-    template 'main', { content => $content };
+    template 'main', { content => $content, ncip_version => $ncip->{ncip_protocol_version} };
 };
 
 true;

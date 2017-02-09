@@ -65,18 +65,23 @@ use Cwd qw/realpath/;
 =cut
 
 sub new {
-    my $class    = shift;
-    my $params   = shift;
+    my $class  = shift;
+    my $params = shift;
+
     my $subclass = __PACKAGE__ . "::" . $params->{type};
     load $subclass || die "Can't load module $subclass";
-    my $appdir = realpath( "$FindBin::Bin/..");
+
+    my $appdir = realpath("$FindBin::Bin/..");
+
     my $self = bless {
-        type      => $params->{type},
-        namespace => $params->{namespace},
-        ils       => $params->{ils},
-        config    => $params->{config},
-        templates => "$appdir/templates",
+        type         => $params->{type},
+        namespace    => $params->{namespace},
+        ils          => $params->{ils},
+        config       => $params->{config},
+        ncip_version => $params->{ncip_version},
+        templates    => "$appdir/templates",
     }, $subclass;
+
     return $self;
 }
 
@@ -147,23 +152,34 @@ sub get_item_elements {
 =cut
 
 sub get_agencies {
-    my $self   = shift;
-    my $xmldoc = shift;
-    my $xpc    = XML::LibXML::XPathContext->new;
+    my ( $self, $xmldoc, $ncip_version ) = @_;
+
+    my $xpc = XML::LibXML::XPathContext->new;
     $xpc->registerNs( 'ns', $self->namespace() );
 
     my $root = $xmldoc->documentElement();
 
-    my $from = $xpc->find( '//ns:FromAgencyId', $root );
-    my $to   = $xpc->find( '//ns:ToAgencyId',   $root );
+    my ( $from, $to );
+
+    if ( $ncip_version == 1 ) {
+        $from = $xpc->find( '//FromAgencyId/UniqueAgencyId/Value', $root );
+        $to   = $xpc->find( '//ToAgencyId/UniqueAgencyId/Value',   $root );
+    }
+    else {
+        $from = $xpc->find( 'ns://FromAgencyId', $root );
+        $to   = $xpc->find( 'ns://ToAgencyId',   $root );
+    }
+
     return ( $from, $to );
 }
 
 sub render_output {
-    my $self         = shift;
-    my $templatename = shift;
+    my ( $self, $template_name, $vars, $ncip_version ) = @_;
 
-    my $vars     = shift;
+    $ncip_version ||= 2; # Default to assume NCIP version 2
+
+    $vars->{ncip_version} = $ncip_version;
+
     my $template = Template->new(
         {
             INCLUDE_PATH => $self->templates,
@@ -171,9 +187,9 @@ sub render_output {
         }
     ) || die Template->error();
     my $output;
-    $template->process( $templatename, $vars, \$output )
+    $template->process( "v$ncip_version/$template_name", $vars, \$output )
       || die $template->error();
-    $output = xml_tidy( $output );
+    $output = xml_tidy($output);
     ##warn "XML RESPONSE:\n$output";
     return $output;
 }

@@ -53,27 +53,32 @@ sub new {
 =cut
 
 sub process_request {
-    my $self           = shift;
-    my $xml            = shift;
-    my $config         = shift;
-    my ($request_type) = $self->handle_initiation($xml);
+    my $self   = shift;
+    my $xml    = shift;
+    my $config = shift;
+
+    my ( $request_type, $ncip_version ) = $self->handle_initiation($xml);
+    $self->{ncip_protocol_version} = $ncip_version;
+
     unless ($request_type) {
 
       # We have invalid xml, or we can't figure out what kind of request this is
       # Handle error here
-      #        warn "We can't find request type";
         my $output = $self->_error("We can't find request type");
         return $output;
     }
+
     my $handler = NCIP::Handler->new(
         {
             namespace    => $self->namespace(),
             type         => $request_type,
             ils          => $self->ils,
             config       => $config,
+            ncip_version => $ncip_version,
             template_dir => $self->config->('NCIP.templates.value'),
         }
     );
+
     return xml_tidy( $handler->handle( $self->xmldoc ) );
 }
 
@@ -91,7 +96,7 @@ sub handle_initiation {
         $log->info("Invalid xml we can not parse it ");
     }
 
-    ##warn "INCOMING XML:\n" . xml_tidy($xml);
+    $log->info( sub { "INCOMING XML:\n" . xml_tidy($xml) } );
 
     if ($dom) {
 
@@ -102,14 +107,16 @@ sub handle_initiation {
             #            warn " Not valid xml";
 
             # throw/log error
+            $log->error("INVALID XML DOM!");
+
             return;
         }
-        my $request_type = $self->parse_request($dom);
+        my ( $request_type, $ncip_version ) = $self->parse_request($dom);
 
         # do whatever we should do to initiate, then hand back request_type
         if ($request_type) {
             $self->{xmldoc} = $dom;
-            return $request_type;
+            return ( $request_type, $ncip_version );
         }
     }
     else {
@@ -128,7 +135,6 @@ sub validate {
         $dom->validate();
     }
     catch {
-        warn "Bad xml, caught error: $_";
         return;
     };
 
@@ -143,25 +149,25 @@ sub parse_request {
     my $self = shift;
     my $dom  = shift;
     my $nodes =
-      $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
+      $dom->getElementsByTagName( 'NCIPMessage' );
     if ($nodes) {
+        my $version = index($nodes->[0]->getAttribute('version'), 'v2') != -1 ? 2 : 1;
+
         my @childnodes = $nodes->[0]->childNodes();
         # The message tag ( e.g. <LookupUser> ) location changes based on line breaks
         # so we need to check the first and second nodes to see where it is.
         # Weird, right?
         if ( $childnodes[0] && $childnodes[0]->localname() ) {
-            return $childnodes[0]->localname();
+            return ( $childnodes[0]->localname(), $version );
         }
         elsif ( $childnodes[1] && $childnodes[1]->localname() ) {
-            return $childnodes[1]->localname();
+            return ( $childnodes[1]->localname(), $version );
         }
         else {
-            warn "Got a node, but no child node";
             return;
         }
     }
     else {
-        warn "Invalid XML";
         return;
     }
     return;

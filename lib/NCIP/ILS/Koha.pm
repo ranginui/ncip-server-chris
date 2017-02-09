@@ -328,7 +328,7 @@ sub checkout {
             my $issue = AddIssue( $borrower, $barcode, $date_due );
             $date_due = $issue->date_due();
             $date_due =~ s/ /T/;
-            return { success => 1, date_due => $date_due };
+            return { success => 1, date_due => $date_due, newbarcode => $barcode };
         }
     }
     else {
@@ -425,7 +425,8 @@ sub renew {
       }
       if $error;    # Generic message for all other reasons
 
-    my $datedue = AddRenewal( $borrower->{borrowernumber}, $item->{itemnumber} );
+    my $datedue =
+      AddRenewal( $borrower->{borrowernumber}, $item->{itemnumber} );
 
     return {
         success => 1,
@@ -702,24 +703,26 @@ sub acceptitem {
     my $fieldslib = C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
     my $itemtype = $fieldslib->{$field}{$subfield}{defaultvalue};
 
-    unless ( $branchcode ) {
+    unless ($branchcode) {
         my $branches = GetBranchesLoop();
         if ( @$branches > 1 ) {
             return {
                 success  => 0,
                 problems => [
                     {
-                        problem_type    => 'Pickup Library Not Specified',
-                        problem_detail  => 'Pickup library not specified in AcceptItem message.',
+                        problem_type => 'Pickup Library Not Specified',
+                        problem_detail =>
+                          'Pickup library not specified in AcceptItem message.',
                     }
                 ]
             };
-        } else {
+        }
+        else {
             $branchcode = $branches->[0]->{branchcode};
         }
     }
 
-    $self->userenv();               # set userenvironment
+    $self->userenv();    # set userenvironment
     my ( $biblionumber, $biblioitemnumber );
     if ($create) {
         my $record;
@@ -777,8 +780,8 @@ sub acceptitem {
             'homebranch'    => $item_branchcode,
             'itype'         => $itemtype,
         };
-        ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode ) =
-          AddItem( $item, $biblionumber );
+        ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode )
+          = AddItem( $item, $biblionumber );
     }
 
     # find hold and get branch for that, check in there
@@ -788,7 +791,7 @@ sub acceptitem {
       GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
 
     # now we have to check the requested action
-    if ( $action =~ /^Hold For Pickup/ ) {
+    if ( $action =~ /^Hold For Pickup/ || $action =~ /^Circulate/ ) {
         unless ($reserve_id) {
 
             # no reserve, place one

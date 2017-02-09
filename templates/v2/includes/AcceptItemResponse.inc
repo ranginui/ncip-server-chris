@@ -1,5 +1,5 @@
 <RequestId>
-  <AgencyId>[% requestagency | xml %]</AgencyId>
+  <AgencyId>[% request_agency | xml %]</AgencyId>
   <RequestIdentifierValue>[% requestid | xml %]</RequestIdentifierValue>
 </RequestId>
 <ItemId>
