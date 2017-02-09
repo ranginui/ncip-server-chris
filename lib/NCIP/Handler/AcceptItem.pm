@@ -101,7 +101,7 @@ sub handle {
         my $pickup_location = $to;
         $pickup_location ||= $xpc->find( '//PickupLocation', $root );
 
-        my $data = $self->ils->acceptitem( $itemid->[0]->textContent(), $user_id, $action, $create, $itemdata, $pickup_location, $config );
+        my $data = $self->ils->acceptitem( $itemid, $user_id, $action, $create, $itemdata, $pickup_location, $config );
 
         my $output;
         my $vars;

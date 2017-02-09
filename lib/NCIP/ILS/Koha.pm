@@ -684,14 +684,14 @@ sub cancelrequest {
 }
 
 sub acceptitem {
-    my $self    = shift || die "Not called as a method, we must bail out";
-    my $barcode = shift || die "No barcode passed can not continue";
-    my $user    = shift;
-    my $action  = shift;
-    my $create  = shift;
+    my $self       = shift;
+    my $barcode    = shift;
+    my $user       = shift;
+    my $action     = shift;
+    my $create     = shift;
     my $iteminfo   = shift;
     my $branchcode = shift;
-    my $config = shift;
+    my $config     = shift;
 
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
@@ -764,8 +764,7 @@ sub acceptitem {
 
         }
 
-        ( $biblionumber, $biblioitemnumber ) =
-          AddBiblio( $record, $frameworkcode );
+        ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, $frameworkcode );
         my $itemnumber;
 
         # If the barcode already exists, just make up a new one
