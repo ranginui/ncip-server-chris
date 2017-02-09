@@ -860,7 +860,7 @@ sub acceptitem {
 
     # we do this because we are only doing the return to trigger the hold
     my ( $success, $messages, $issue, $borrower ) =
-      AddReturn( $barcode, $branchcode, undef, undef );
+      AddReturn( $barcode, $item_branchcode, undef, undef );
     $success = $messages->{'NotIssued'} ? 1 : 0;
     my $problems =
       $success
