@@ -166,8 +166,8 @@ sub get_agencies {
         $to   = $xpc->find( '//ToAgencyId/UniqueAgencyId/Value',   $root );
     }
     else {
-        $from = $xpc->find( 'ns://FromAgencyId', $root );
-        $to   = $xpc->find( 'ns://ToAgencyId',   $root );
+        $from = $xpc->find( '//ns:FromAgencyId', $root );
+        $to   = $xpc->find( '//ns:ToAgencyId',   $root );
     }
 
     return ( $from, $to );

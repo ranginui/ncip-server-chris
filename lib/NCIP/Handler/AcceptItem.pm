@@ -28,7 +28,12 @@ sub handle {
 
         my $config = $self->{config}->{koha};
 
-        my ( $itemid, $action, $request, $request_agency, $request_id, $user_id, $item_info );
+        my ( $itemid, $action, $request, $request_agency, $request_id,
+            $user_id, $item_info );
+
+        my ( $bibliographic, $author, $date, $publisher, $medium );
+        my $itemdata = {};
+
         if ( $self->{ncip_version} == 1 ) {
             $itemid = $xpc->find( '//ItemIdentifierValue', $root );
             ($action) = $xpc->find( '//RequestedActionType//Value', $root );
@@ -38,6 +43,35 @@ sub handle {
             $user_id    = $xpc->find( '//UserIdentifierValue',    $root );
 
             $item_info = $xpc->find( '//ItemOptionalFields', $root );
+
+            if ( $item_info->[0] ) {
+                my $bibliographic =
+                  $xpc->find( '//BibliographicDescription', $item_info->[0] );
+                my $title = $xpc->find( '//Title', $bibliographic->[0] );
+                if ( $title->[0] ) {
+                    $itemdata->{title} = $title->[0]->textContent();
+                }
+                my $author = $xpc->find( '//Author', $bibliographic->[0] );
+                if ( $author->[0] ) {
+                    $itemdata->{author} = $author->[0]->textContent();
+                }
+                my $date =
+                  $xpc->find( '//PublicationDate', $bibliographic->[0] );
+                if ( $date->[0] ) {
+                    $itemdata->{publicationdate} = $date->[0]->textContent();
+                }
+                my $publisher =
+                  $xpc->find( '//Publisher', $bibliographic->[0] );
+                if ( $publisher->[0] ) {
+                    $itemdata->{publisher} = $publisher->[0]->textContent();
+                }
+                my $medium = $xpc->find( '//Mediumtype', $bibliographic->[0] );
+                if ( $medium->[0] ) {
+                    $itemdata->{mediumtype} = $medium->[0]->textContent();
+                }
+            }
+
+            # accept the item
         }
         else {    # $version == 2
             $itemid = $xpc->find( '//ns:ItemIdentifierValue', $root );
@@ -52,41 +86,35 @@ sub handle {
             }
 
             $item_info = $xpc->find( '//ns:ItemOptionalFields', $root );
-        }
 
-        my $itemdata = {};
-
-        if ( $item_info->[0] ) {
-
-            # populate a hashref with bibliographic data,
-            # we need this to create an item
-            # (this could be moved up to Handler.pm
-            # eventually as CreateItem will need this also)
-            my $bibliographic =
-              $xpc->find( '//BibliographicDescription', $item_info->[0] );
-            my $title = $xpc->find( '//Title', $bibliographic->[0] );
-            if ( $title->[0] ) {
-                $itemdata->{title} = $title->[0]->textContent();
-            }
-            my $author = $xpc->find( '//Author', $bibliographic->[0] );
-            if ( $author->[0] ) {
-                $itemdata->{author} = $author->[0]->textContent();
-            }
-            my $date = $xpc->find( '//PublicationDate', $bibliographic->[0] );
-            if ( $date->[0] ) {
-                $itemdata->{publicationdate} = $date->[0]->textContent();
-            }
-            my $publisher = $xpc->find( '//Publisher', $bibliographic->[0] );
-            if ( $publisher->[0] ) {
-                $itemdata->{publisher} = $publisher->[0]->textContent();
-            }
-            my $medium = $xpc->find( '//Mediumtype', $bibliographic->[0] );
-            if ( $medium->[0] ) {
-                $itemdata->{mediumtype} = $medium->[0]->textContent();
+            if ( $item_info->[0] ) {
+                my $bibliographic =
+                  $xpc->find( '//ns:BibliographicDescription', $item_info->[0] );
+                my $title = $xpc->find( '//ns:Title', $bibliographic->[0] );
+                if ( $title->[0] ) {
+                    $itemdata->{title} = $title->[0]->textContent();
+                }
+                my $author = $xpc->find( '//ns:Author', $bibliographic->[0] );
+                if ( $author->[0] ) {
+                    $itemdata->{author} = $author->[0]->textContent();
+                }
+                my $date =
+                  $xpc->find( '//ns:PublicationDate', $bibliographic->[0] );
+                if ( $date->[0] ) {
+                    $itemdata->{publicationdate} = $date->[0]->textContent();
+                }
+                my $publisher =
+                  $xpc->find( '//ns:Publisher', $bibliographic->[0] );
+                if ( $publisher->[0] ) {
+                    $itemdata->{publisher} = $publisher->[0]->textContent();
+                }
+                my $medium = $xpc->find( '//ns:Mediumtype', $bibliographic->[0] );
+                if ( $medium->[0] ) {
+                    $itemdata->{mediumtype} = $medium->[0]->textContent();
+                }
             }
         }
 
-        # accept the item
         my ( $from, $to ) =
           $self->get_agencies( $xmldoc, $self->{ncip_version} );
 
@@ -101,7 +129,9 @@ sub handle {
         my $pickup_location = $to;
         $pickup_location ||= $xpc->find( '//PickupLocation', $root );
 
-        my $data = $self->ils->acceptitem( $itemid, $user_id, $action, $create, $itemdata, $pickup_location, $config );
+        my $data =
+          $self->ils->acceptitem( $itemid, $user_id, $action, $create,
+            $itemdata, $pickup_location, $config );
 
         my $output;
         my $vars;
