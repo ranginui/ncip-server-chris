@@ -109,7 +109,7 @@ sub handle_initiation {
             # throw/log error
             $log->error("INVALID XML DOM!");
 
-            return;
+            return ( undef, '2' ); # Hard code default of NCIP version 2
         }
         my ( $request_type, $ncip_version ) = $self->parse_request($dom);
 
@@ -122,7 +122,7 @@ sub handle_initiation {
     else {
         $log->info("We have no DOM");
 
-        return;
+        return ( undef, '2' ); # Hard code default of NCIP version 2
     }
 }
 
