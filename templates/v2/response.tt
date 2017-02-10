@@ -1,4 +1,4 @@
 <[%- message_type -%]>
-    [%- myfile = "v2/includes/$message_type" _ ".inc" -%]
+    [%- myfile = "v" _ ncip_version _ "/includes/$message_type" _ ".inc" -%]
     [% INCLUDE $myfile %]    
 </[%- message_type -%]>

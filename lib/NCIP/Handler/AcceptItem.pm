@@ -115,16 +115,15 @@ sub handle {
             }
         }
 
-        my ( $from, $to ) =
-          $self->get_agencies( $xmldoc, $self->{ncip_version} );
+        my ( $from, $to ) = $self->get_agencies($xmldoc);
 
         # Autographics workflow is for an accept item i
         # to create the item then do what is in $action
-        my $create = 0;
-        if ( $from && $from =~ /CPomAG/ ) {
-            $create = 1;
-        }
-        $create = 1;    # Same for Relais, just always create for now
+        # my $create = 0;
+        # if ( $from && $from =~ /CPomAG/ ) {
+        #    $create = 1;
+        # }
+        my $create = 1;    # Same for Relais and Clio, just always create for now
 
         my $pickup_location = $to;
         $pickup_location ||= $xpc->find( '//PickupLocation', $root );

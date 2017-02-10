@@ -26,9 +26,19 @@ sub handle {
         my $root = $xmldoc->documentElement();
         my $xpc  = $self->xpc();
 
-        my $userid   = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
-        my $itemid   = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
-        my $date_due = $xpc->findnodes( '//ns:DesiredDateDue',      $root );
+        my $userid;
+        my $itemid;
+        my $date_due;
+
+        if ( $self->{ncip_version} == 1 ) {
+            $userid   = $xpc->findnodes( '//UserIdentifierValue', $root );
+            $itemid   = $xpc->findnodes( '//ItemIdentifierValue', $root );
+            $date_due = $xpc->findnodes( '//DesiredDateDue',      $root );
+        } else { # $self->{ncip_version} == 2
+            $userid   = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
+            $itemid   = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+            $date_due = $xpc->findnodes( '//ns:DesiredDateDue',      $root );
+        }
 
         # checkout the item
         my $data = $self->ils->checkout( $userid, $itemid, $date_due );
@@ -47,8 +57,8 @@ sub handle {
                     userid       => $userid,
                     elements     => $elements,
                     datedue      => $data->{date_due},
-                }
-
+                },
+                $self->{ncip_version},
             );
         }
         else {

@@ -152,7 +152,9 @@ sub get_item_elements {
 =cut
 
 sub get_agencies {
-    my ( $self, $xmldoc, $ncip_version ) = @_;
+    my ( $self, $xmldoc ) = @_;
+
+    my $ncip_version = $self->{ncip_version};
 
     my $xpc = XML::LibXML::XPathContext->new;
     $xpc->registerNs( 'ns', $self->namespace() );
@@ -162,8 +164,8 @@ sub get_agencies {
     my ( $from, $to );
 
     if ( $ncip_version == 1 ) {
-        $from = $xpc->find( '//FromAgencyId/UniqueAgencyId/Value', $root );
-        $to   = $xpc->find( '//ToAgencyId/UniqueAgencyId/Value',   $root );
+        $from = $xpc->find( '//InitiationHeader/FromAgencyId/UniqueAgencyId/Value', $root );
+        $to   = $xpc->find( '//InitiationHeader/ToAgencyId/UniqueAgencyId/Value',   $root );
     }
     else {
         $from = $xpc->find( '//ns:FromAgencyId', $root );
