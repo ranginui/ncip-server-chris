@@ -176,9 +176,11 @@ sub get_agencies {
 }
 
 sub render_output {
-    my ( $self, $template_name, $vars, $ncip_version ) = @_;
+    my ( $self, $template_name, $vars ) = @_;
 
-    $ncip_version ||= 2; # Default to assume NCIP version 2
+    my $ncip_version = $self->{ncip_version};
+
+    #$ncip_version ||= 2; # Default to assume NCIP version 2
 
     $vars->{ncip_version} = $ncip_version;
 

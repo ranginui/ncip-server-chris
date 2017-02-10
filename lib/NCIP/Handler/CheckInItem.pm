@@ -25,7 +25,13 @@ sub handle {
     if ($xmldoc) {
         my $root   = $xmldoc->documentElement();
         my $xpc    = $self->xpc();
-        my $itemid = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+
+        my $itemid;
+        if ( $self->{ncip_version} == 1 ) {
+            $itemid = $xpc->findnodes( '//ItemIdentifierValue', $root );
+        } else {
+            $itemid = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+        }
 
         # check in the item
         my $branch = undef;    # where the hell do we get this from???
