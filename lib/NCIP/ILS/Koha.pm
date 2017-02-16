@@ -51,6 +51,7 @@ use C4::Reserves qw{
   CancelReserve
   GetReservesFromBiblionumber
   GetReserveStatus
+  ModReserveAffect
 };
 use C4::Biblio qw{
   AddBiblio
@@ -61,6 +62,7 @@ use C4::Biblio qw{
 use C4::Barcodes::ValueBuilder;
 use C4::Items qw{
   AddItem
+  ModItemTransfer
 };
 use Koha::Database;
 use Koha::Holds;
@@ -146,36 +148,64 @@ sub checkin {
     my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branch, $exempt_fine, $dropbox );
 
+    warn "MESSAGES: " . Data::Dumper::Dumper( $messages );
+
     my @problems;
 
     $success ||= 1 if $messages->{LocalUse};
 
-    if ( $config->{no_error_on_return_without_checkout} ) {
-        $success ||= 1 if $messages->{NotIssued};
-    } else {
-        $success &&= 0 if $messages->{NotIssued};
+    if ( $messages->{NotIssued} ) {
+        if (   $config->{no_error_on_return_without_checkout}
+            || $config->{trap_hold_on_checkin} )
+        {
+            $success ||= 1;
+        }
+        else {
 
+            $success &&= 0;
+
+            push(
+                @problems,
+                {
+                    problem_type    => 'Item Not Checked Out',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                    problem_detail =>
+                      'There is no record of the check out of the item.',
+                }
+            );
+        }
+    }
+
+    if ( $messages->{ResFound} && $config->{trap_hold_on_checkin} ) {
+        my $itemnumber        = $messages->{ResFound}->{itemnumber};
+        my $borrowernumber    = $messages->{ResFound}->{borrowernumber};
+        my $reserve_id        = $messages->{ResFound}->{reserve_id};
+        my $pickup_branchcode = $messages->{ResFound}->{branchcode};
+
+        my $item = Koha::Items->find($itemnumber);
+
+        my $transferToDo = $item->holdingbranch ne $pickup_branchcode;
+        ModReserveAffect( $itemnumber, $borrowernumber, $transferToDo, $reserve_id );
+
+        if ($transferToDo) {
+            my $from_branch = $item->holdingbranch;
+            my $to_branch   = $pickup_branchcode;
+            ModItemTransfer( $itemnumber, $from_branch, $to_branch );
+        }
+    }
+
+    if ( $messages->{BadBarcode} ) {
         push(
             @problems,
             {
-                problem_type    => 'Item Not Checked Out',
+                problem_type    => 'Unknown Item',
                 problem_element => 'UniqueItemIdentifier',
                 problem_value   => $barcode,
-                problem_detail =>
-                  'There is no record of the check out of the item.',
+                problem_detail  => 'Item is not known.',
             }
-        ) if $messages->{NotIssued};
+        );
     }
-
-    push(
-        @problems,
-        {
-            problem_type    => 'Unknown Item',
-            problem_element => 'UniqueItemIdentifier',
-            problem_value   => $barcode,
-            problem_detail  => 'Item is not known.',
-        }
-    ) if $messages->{BadBarcode};
 
     my $result = {
         success   => $success,
