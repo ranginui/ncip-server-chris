@@ -27,24 +27,36 @@ sub handle {
         my $xpc  = XML::LibXML::XPathContext->new;
         $xpc->registerNs( 'ns', $self->namespace() );
 
-        my ($userid) = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
-        $userid = $userid->textContent() if $userid;
+        my $userid;
+        my $itemid;
+        my $biblionumber;
+        my $branchcode;
 
-        my ($itemid) = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
-        $itemid = $itemid->textContent() if $itemid;
+        if ( $self->{ncip_version} == 1 ) {
+            ($userid) = $xpc->findnodes( '//UserIdentifierValue', $root );
+            $userid = $userid->textContent() if $userid;
 
-        my ($biblio_id) =
-          $xpc->findnodes( '//ns:BibliographicRecordIdentifier', $root );
-        my $biblionumber = $biblio_id->textContent() if $biblio_id;
+            ($itemid) = $xpc->findnodes( '//ItemIdentifierValue', $root );
+            $itemid = $itemid->textContent() if $itemid;
 
-        my ($biblio_type) =
-          $xpc->findnodes( '//ns:BibliographicItemIdentifierCode', $root );
+            ($biblionumber) = $xpc->findnodes( '//BibliographicRecordIdentifier', $root );
+            $biblionumber = $biblionumber->textContent() if $biblionumber;
+        } else {
+            ($userid) = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
+            $userid = $userid->textContent() if $userid;
+
+            ($itemid) = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+            $itemid = $itemid->textContent() if $itemid;
+
+            ($biblionumber) = $xpc->findnodes( '//ns:BibliographicRecordIdentifier', $root );
+            $biblionumber = $biblionumber->textContent() if $biblionumber;
+        }
+
         my $type = 'SYSNUMBER';
-        $type = $biblio_type->textContent() if $biblio_type;
 
         my ( $from, $to ) = $self->get_agencies($xmldoc);
 
-        my $branchcode = $to->[0]->textContent() if $to;
+        $branchcode = $to->[0]->textContent() if $to;
 
         my $data =
           $self->ils->request( $userid, $itemid, $biblionumber, $type,

@@ -26,6 +26,8 @@ sub handle {
         my $root   = $xmldoc->documentElement();
         my $xpc    = $self->xpc();
 
+        my $config = $self->{config}->{koha};
+
         my $itemid;
         if ( $self->{ncip_version} == 1 ) {
             $itemid = $xpc->findnodes( '//ItemIdentifierValue', $root );
@@ -37,7 +39,13 @@ sub handle {
         my $branch = undef;    # where the hell do we get this from???
         my ( $from, $to ) = $self->get_agencies($xmldoc);
 
-        my $checkin = $self->ils->checkin( $itemid, $branch );
+        my $checkin = $self->ils->checkin(
+            {
+                barcode => $itemid,
+                branch  => $branch,
+                config  => $config,
+            }
+        );
 
         if ( $checkin->{success} ) {
             return $self->render_output(

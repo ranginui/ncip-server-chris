@@ -161,8 +161,7 @@ sub handle {
                     newbarcode     => $data->{'newbarcode'} || $itemid,
                     elements       => $elements,
                     accept         => $data,
-                },
-                $self->{ncip_version},
+                }
             );
         }
         return $output;

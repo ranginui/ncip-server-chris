@@ -129,11 +129,12 @@ sub userenv {    #FIXME: This really needs to be in a config file
 }
 
 sub checkin {
-    my $self        = shift;
-    my $barcode     = shift;
-    my $branch      = shift;
-    my $exempt_fine = undef;
-    my $dropbox     = undef;
+    my ( $self, $params ) = @_;
+    my $barcode      = $params->{barcode};
+    my $branch       = $params->{branch};
+    my $exempt_fine  = $params->{exempt_fine};
+    my $dropbox      = $params->{dropbox};
+    my $config       = $params->{config};
 
     $self->userenv();
 
@@ -145,21 +146,26 @@ sub checkin {
     my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branch, $exempt_fine, $dropbox );
 
-    $success ||= 1 if $messages->{LocalUse};
-    $success &&= 0 if $messages->{NotIssued};
-
     my @problems;
 
-    push(
-        @problems,
-        {
-            problem_type    => 'Item Not Checked Out',
-            problem_element => 'UniqueItemIdentifier',
-            problem_value   => $barcode,
-            problem_detail =>
-              'There is no record of the check out of the item.',
-        }
-    ) if $messages->{NotIssued};
+    $success ||= 1 if $messages->{LocalUse};
+
+    if ( $config->{no_error_on_return_without_checkout} ) {
+        $success ||= 1 if $messages->{NotIssued};
+    } else {
+        $success &&= 0 if $messages->{NotIssued};
+
+        push(
+            @problems,
+            {
+                problem_type    => 'Item Not Checked Out',
+                problem_element => 'UniqueItemIdentifier',
+                problem_value   => $barcode,
+                problem_detail =>
+                  'There is no record of the check out of the item.',
+            }
+        ) if $messages->{NotIssued};
+    }
 
     push(
         @problems,
@@ -583,8 +589,7 @@ sub request {
                           . 'acting ont his update would create a duplicate request for the Item for the User',
                     }
                 ]
-              }
-              unless $itemdata;
+              };
         }
     }
     elsif ( $can_reserve eq 'damaged' ) {

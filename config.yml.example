@@ -35,4 +35,5 @@ default_mime_type: "application/xml; charset='utf-8'"
 koha:
   framework: 'FA'
   item_branchcode: 'MPL'
-  always_generate_barcode: 1
+  always_generate_barcode: 0
+  no_error_on_return_without_checkout: 0

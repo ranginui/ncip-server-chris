@@ -57,8 +57,7 @@ sub handle {
                     userid       => $userid,
                     elements     => $elements,
                     datedue      => $data->{date_due},
-                },
-                $self->{ncip_version},
+                }
             );
         }
         else {
