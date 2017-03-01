@@ -17,7 +17,10 @@ any [ 'get', 'post' ] => '/' => sub {
     }
     my $content = $ncip->process_request($xml, config);
 
-    template 'main', { content => $content, ncip_version => $ncip->{ncip_protocol_version} };
+
+    my $xml = template 'main', { content => $content, ncip_version => $ncip->{ncip_protocol_version} };
+    warn "XML RESPONSE:*$xml*";
+    return $xml;
 };
 
 true;

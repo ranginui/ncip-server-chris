@@ -194,7 +194,6 @@ sub render_output {
     $template->process( "v$ncip_version/$template_name", $vars, \$output )
       || die $template->error();
     $output = xml_tidy($output);
-    warn "XML RESPONSE:\n*$output*";
     return $output;
 }
 1;
