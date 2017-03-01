@@ -734,6 +734,7 @@ sub acceptitem {
     my $frameworkcode   = $config->{framework}       || 'FA';
     my $item_branchcode = $config->{item_branchcode} || $branchcode;
     my $always_generate_barcode = $config->{always_generate_barcode} || 0;
+    my $barcode_prefix = $config->{barcode_prefix} || q{};
 
     my ( $field, $subfield ) = GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
     my $fieldslib = C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
@@ -803,10 +804,17 @@ sub acceptitem {
         ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, $frameworkcode );
         my $itemnumber;
 
-        $barcode = q{} if $always_generate_barcode; # Blank out the barcode so it gets regenerated
-        $barcode = 'ILL' . $biblionumber . time unless $barcode; # Reasonable gurantee of uniqueness
+        if ( $barcode_prefix ) {
+            $barcode = $barcode_prefix . $barcode;
+        }
+
+        if ( $always_generate_barcode ) {
+            $barcode = q{}; # Blank out the barcode so it gets regenerated
+        } 
+
+        $barcode = $barcode_prefix . $biblionumber . time unless $barcode; # Reasonable gurantee of uniqueness
         while ( GetItem( undef, $barcode ) ) { # If the barcode already exists, just make up a new one
-            $barcode = 'ILL' . $biblionumber . time;
+            $barcode = $barcode_prefix . $biblionumber . time;
         }
 
         my $item = {
