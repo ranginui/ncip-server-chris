@@ -57,6 +57,7 @@ sub process_request {
     my $xml    = shift;
     my $config = shift;
 
+    warn "REQUEST:\n*" . xml_tidy($xml) . "*";
     my ( $request_type, $ncip_version ) = $self->handle_initiation($xml);
     $self->{ncip_protocol_version} = $ncip_version;
 
