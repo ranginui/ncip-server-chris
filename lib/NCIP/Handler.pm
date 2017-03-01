@@ -51,7 +51,6 @@ package NCIP::Handler;
 
 use Modern::Perl;
 use Object::Tiny qw{ type namespace ils templates };
-use XML::Tidy::Tiny qw(xml_tidy);
 use Module::Load;
 use Template;
 use FindBin;
@@ -193,7 +192,6 @@ sub render_output {
     my $output;
     $template->process( "v$ncip_version/$template_name", $vars, \$output )
       || die $template->error();
-    $output = xml_tidy($output);
     return $output;
 }
 1;
