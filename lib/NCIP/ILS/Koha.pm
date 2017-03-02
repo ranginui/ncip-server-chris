@@ -42,6 +42,7 @@ use C4::Circulation qw{
 use C4::Context;
 use C4::Items qw{
   GetItem
+  DelItem
 };
 use C4::Reserves qw{
   CanBookBeReserved
@@ -55,6 +56,7 @@ use C4::Reserves qw{
 };
 use C4::Biblio qw{
   AddBiblio
+  DelBiblio
   GetMarcFromKohaField
   GetBiblioData
   GetMarcBiblio
@@ -66,6 +68,7 @@ use C4::Items qw{
 };
 use Koha::Database;
 use Koha::Holds;
+use Koha::Items;
 
 sub itemdata {
     my $self    = shift;
@@ -925,6 +928,61 @@ sub acceptitem {
         borrower   => $borrower,
         newbarcode => $barcode,
     };
+}
+
+sub delete_item {
+    my ( $self, $params ) = @_;
+    my $barcode      = $params->{barcode};
+    my $branch       = $params->{branch};
+    my $config       = $params->{config};
+
+    my $success = 1;
+    my @problems;
+
+    $self->userenv();
+
+    my $item = Koha::Items->find( { barcode => $barcode } );
+    my $biblio = Koha::Biblios->find( $item->biblionumber );
+
+    if ( $item ) {
+	$success = DelItem({ itemnumber => $item->id, biblionumber => $item->biblionumber } );
+
+        if ( $biblio->items->count == 0 ) {
+            DelBiblio( $biblio->id );
+        }
+
+        unless ( $success ) {
+            push(
+                @problems,
+                {
+                    problem_type    => 'Unknown Item',
+                    problem_element => 'UniqueItemIdentifier',
+                    problem_value   => $barcode,
+                    problem_detail  => 'Item is not known.',
+                }
+            );
+        }
+    } else {
+        $success = 0;
+
+        push(
+            @problems,
+            {
+                problem_type    => 'Unknown Item',
+                problem_element => 'UniqueItemIdentifier',
+                problem_value   => $barcode,
+                problem_detail  => 'Item is not known.',
+            }
+        );
+    }
+
+    my $result = {
+        success   => $success,
+        problems  => \@problems,
+        item => $item,
+    };
+
+    return $result;
 }
 
 sub authenticate_patron {
