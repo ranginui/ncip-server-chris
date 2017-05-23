@@ -90,7 +90,7 @@ sub itemdata {
         my $hold = GetReserveStatus( $item->{itemnumber} );
         $item->{hold} = $hold;
 
-        my @holds = Koha::Holds->search( { $item->{biblionumber} } );
+        my @holds = Koha::Holds->search( { biblionumber =>  $item->{biblionumber} } );
         $item->{holds} = \@holds;
 
         my @transfers = GetTransfers( $item->{itemnumber} );
