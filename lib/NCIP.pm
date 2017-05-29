@@ -151,8 +151,15 @@ sub parse_request {
     my $dom  = shift;
     my $nodes =
       $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
+
     if ($nodes) {
-        my $version = index($nodes->[0]->getAttribute('version'), 'v2') != -1 ? 2 : 1;
+        my $version = 1;
+        if  ($nodes->[0]->hasAttributeNS($self->namespace(), 'version')) {
+            $version = index($nodes->[0]->getAttributeNS($self->namespace(), 'version'), 'v2') != -1 ? 2 : 1;
+        }
+        elsif ($nodes->[0]->hasAttribute('version')) {
+            $version = index($nodes->[0]->getAttribute('version'), 'v2') != -1 ? 2 : 1;
+        }
 
         my @childnodes = $nodes->[0]->childNodes();
         # The message tag ( e.g. <LookupUser> ) location changes based on line breaks
