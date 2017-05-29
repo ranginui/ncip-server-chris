@@ -150,7 +150,7 @@ sub parse_request {
     my $self = shift;
     my $dom  = shift;
     my $nodes =
-      $dom->getElementsByTagName( 'NCIPMessage' );
+      $dom->getElementsByTagNameNS( $self->namespace(), 'NCIPMessage' );
     if ($nodes) {
         my $version = index($nodes->[0]->getAttribute('version'), 'v2') != -1 ? 2 : 1;
 
