@@ -24,12 +24,8 @@ use MARC::Field;
 use C4::Auth qw{
   checkpw_hash
 };
-use C4::Branch qw{
-  GetBranchesLoop
-};
 use C4::Members qw{
   GetMemberDetails
-  IsMemberBlocked
 };
 use C4::Circulation qw{
   AddReturn
@@ -69,6 +65,8 @@ use C4::Items qw{
 use Koha::Database;
 use Koha::Holds;
 use Koha::Items;
+use Koha::Libraries;
+use Koha::Patrons;
 
 sub itemdata {
     my $self    = shift;
@@ -106,10 +104,8 @@ sub userdata {
     my $userdata = GetMemberDetails( undef, $userid );
 
     return unless $userdata;
-
-    my ( $block_status, $count ) =
-      IsMemberBlocked( $userdata->{borrowernumber} );
-    $userdata->{restricted} = $block_status;
+    my $patron = Koha::Patrons->find({ borrowernumber => $userdata->{borrowernumber} });
+    $userdata->{restricted} = $patron->is_debarred;
 
     return $userdata;
 }
@@ -744,7 +740,7 @@ sub acceptitem {
     my $itemtype = $fieldslib->{$field}{$subfield}{defaultvalue};
 
     unless ($branchcode) {
-        my $branches = GetBranchesLoop();
+	my $branches = Koha::Libraries->search;
         if ( @$branches > 1 ) {
             return {
                 success  => 0,
