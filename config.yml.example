@@ -35,14 +35,19 @@ default_mime_type: "application/xml; charset='utf-8'"
 koha:
   # Framework to use when creating records
   framework: 'FA'
+
   # Optional setting to force the item created to have a given home/holding branch
   item_branchcode: 'MPL'
+
   # If enabled, NCIP will always generate a new barcode even if the requested barcode is not used via AcceptItem
   always_generate_barcode: 0
+
   # Always add the defined prefix to the beginning of any incoming barcodes via AcceptItem
   barcode_prefix: 'prefix'
+
   # Instead of giving an error on returning a non-checked out item, just return a success message
   no_error_on_return_without_checkout: 0
+
   # AcceptItem places a hold, if this is enabled, a CheckIn message will set the hold to waiting or in transit
   # this setting implies no_error_on_return_without_checkout
   trap_hold_on_checkin: 1
