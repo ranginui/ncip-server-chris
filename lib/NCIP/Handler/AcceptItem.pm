@@ -125,8 +125,9 @@ sub handle {
         # }
         my $create = 1;    # Same for Relais and Clio, just always create for now
 
-        my $pickup_location = $to;
-        $pickup_location ||= $xpc->find( '//PickupLocation', $root );
+        my $pickup_location;
+        $pickup_location ||= $xpc->find( '//ns:PickupLocation', $root );
+        $pickup_location ||= $to->[0]->textContent() if $to && $to->[0];
 
         my $data =
           $self->ils->acceptitem( $itemid, $user_id, $action, $create,
