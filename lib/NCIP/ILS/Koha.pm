@@ -24,11 +24,6 @@ use MARC::Field;
 use C4::Auth qw{
   checkpw_hash
 };
-
-#use C4::Branch qw{
-#  GetBranchesLoop
-#};
-use Koha::Libraries;
 use C4::Members qw{
   GetMemberDetails
 };
@@ -73,6 +68,8 @@ use C4::Items qw{
 use Koha::Database;
 use Koha::Holds;
 use Koha::Items;
+use Koha::Libraries;
+use Koha::Patrons;
 
 sub itemdata {
     my $self    = shift;
@@ -94,7 +91,7 @@ sub itemdata {
         my $hold = GetReserveStatus( $item->{itemnumber} );
         $item->{hold} = $hold;
 
-        my @holds = Koha::Holds->search( { $item->{biblionumber} } );
+        my @holds = Koha::Holds->search( { biblionumber =>  $item->{biblionumber} } );
         $item->{holds} = \@holds;
 
         my @transfers = GetTransfers( $item->{itemnumber} );
@@ -765,8 +762,6 @@ sub acceptitem {
       $iteminfo->{itemtype} || $fieldslib->{$field}{$subfield}{defaultvalue};
 
     unless ($branchcode) {
-
-        #        my $branches = GetBranchesLoop();
         my @branches = Koha::Libraries->search();
         if ( @branches > 1 ) {
             return {
