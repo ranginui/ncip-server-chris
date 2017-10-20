@@ -24,6 +24,7 @@ use MARC::Field;
 use C4::Auth qw{
   checkpw_hash
 };
+
 #use C4::Branch qw{
 #  GetBranchesLoop
 #};
@@ -31,6 +32,7 @@ use Koha::Libraries;
 use C4::Members qw{
   GetMemberDetails
 };
+
 #  IsMemberBlocked
 use Koha::Patrons;
 use C4::Circulation qw{
@@ -109,17 +111,17 @@ sub userdata {
 
     return unless $userdata;
 
-my $block_status;
-my $patron = Koha::Patrons->find( $userdata->{borrowernumber} );
-if ( my $debarred_date = $patron->is_debarred ) {
-$block_status = $debarred_date;
-}
-elsif ( my $num_overdues = $patron->has_overdues ){
-$block_status = $num_overdues;
-}
-else {
-$block_status=0;
-}
+    my $block_status;
+    my $patron = Koha::Patrons->find( $userdata->{borrowernumber} );
+    if ( my $debarred_date = $patron->is_debarred ) {
+        $block_status = $debarred_date;
+    }
+    elsif ( my $num_overdues = $patron->has_overdues ) {
+        $block_status = $num_overdues;
+    }
+    else {
+        $block_status = 0;
+    }
     $userdata->{restricted} = $block_status;
 
     return $userdata;
@@ -146,11 +148,11 @@ sub userenv {    #FIXME: This really needs to be in a config file
 
 sub checkin {
     my ( $self, $params ) = @_;
-    my $barcode      = $params->{barcode};
-    my $branch       = $params->{branch};
-    my $exempt_fine  = $params->{exempt_fine};
-    my $dropbox      = $params->{dropbox};
-    my $config       = $params->{config};
+    my $barcode     = $params->{barcode};
+    my $branch      = $params->{branch};
+    my $exempt_fine = $params->{exempt_fine};
+    my $dropbox     = $params->{dropbox};
+    my $config      = $params->{config};
 
     $self->userenv();
 
@@ -162,7 +164,7 @@ sub checkin {
     my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branch, $exempt_fine, $dropbox );
 
-    warn "MESSAGES: " . Data::Dumper::Dumper( $messages );
+    warn "MESSAGES: " . Data::Dumper::Dumper($messages);
 
     my @problems;
 
@@ -200,7 +202,8 @@ sub checkin {
         my $item = Koha::Items->find($itemnumber);
 
         my $transferToDo = $item->holdingbranch ne $pickup_branchcode;
-        ModReserveAffect( $itemnumber, $borrowernumber, $transferToDo, $reserve_id );
+        ModReserveAffect( $itemnumber, $borrowernumber, $transferToDo,
+            $reserve_id );
 
         if ($transferToDo) {
             my $from_branch = $item->holdingbranch;
@@ -378,7 +381,11 @@ sub checkout {
             my $issue = AddIssue( $borrower, $barcode, $date_due );
             $date_due = $issue->date_due();
             $date_due =~ s/ /T/;
-            return { success => 1, date_due => $date_due, newbarcode => $barcode };
+            return {
+                success    => 1,
+                date_due   => $date_due,
+                newbarcode => $barcode
+            };
         }
     }
     else {
@@ -633,7 +640,7 @@ sub request {
                           . 'acting ont his update would create a duplicate request for the Item for the User',
                     }
                 ]
-              };
+            };
         }
     }
     elsif ( $can_reserve eq 'damaged' ) {
@@ -748,14 +755,18 @@ sub acceptitem {
     my $frameworkcode   = $config->{framework}       || 'FA';
     my $item_branchcode = $config->{item_branchcode} || $branchcode;
     my $always_generate_barcode = $config->{always_generate_barcode} || 0;
-    my $barcode_prefix = $config->{barcode_prefix} || q{};
+    my $barcode_prefix          = $config->{barcode_prefix}          || q{};
 
-    my ( $field, $subfield ) = GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
-    my $fieldslib = C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
-    my $itemtype = $iteminfo->{itemtype} || $fieldslib->{$field}{$subfield}{defaultvalue};
+    my ( $field, $subfield ) =
+      GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
+    my $fieldslib =
+      C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
+    my $itemtype =
+      $iteminfo->{itemtype} || $fieldslib->{$field}{$subfield}{defaultvalue};
 
     unless ($branchcode) {
-#        my $branches = GetBranchesLoop();
+
+        #        my $branches = GetBranchesLoop();
         my @branches = Koha::Libraries->search();
         if ( @branches > 1 ) {
             return {
@@ -770,7 +781,7 @@ sub acceptitem {
             };
         }
         else {
-#            $branchcode = $branches->[0]->{branchcode};
+            #            $branchcode = $branches->[0]->{branchcode};
             $branchcode = $branches[0]->{branchcode};
         }
     }
@@ -817,19 +828,22 @@ sub acceptitem {
 
         }
 
-        ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, $frameworkcode );
+        ( $biblionumber, $biblioitemnumber ) =
+          AddBiblio( $record, $frameworkcode );
         my $itemnumber;
 
-        if ( $barcode_prefix ) {
+        if ($barcode_prefix) {
             $barcode = $barcode_prefix . $barcode;
         }
 
-        if ( $always_generate_barcode ) {
-            $barcode = q{}; # Blank out the barcode so it gets regenerated
-        } 
+        if ($always_generate_barcode) {
+            $barcode = q{};    # Blank out the barcode so it gets regenerated
+        }
 
-        $barcode = $barcode_prefix . $biblionumber . time unless $barcode; # Reasonable gurantee of uniqueness
-        while ( GetItem( undef, $barcode ) ) { # If the barcode already exists, just make up a new one
+        $barcode = $barcode_prefix . $biblionumber . time
+          unless $barcode;     # Reasonable gurantee of uniqueness
+        while ( GetItem( undef, $barcode ) )
+        {    # If the barcode already exists, just make up a new one
             $barcode = $barcode_prefix . $biblionumber . time;
         }
 
@@ -945,9 +959,9 @@ sub acceptitem {
 
 sub delete_item {
     my ( $self, $params ) = @_;
-    my $barcode      = $params->{barcode};
-    my $branch       = $params->{branch};
-    my $config       = $params->{config};
+    my $barcode = $params->{barcode};
+    my $branch  = $params->{branch};
+    my $config  = $params->{config};
 
     my $success = 1;
     my @problems;
@@ -957,14 +971,15 @@ sub delete_item {
     my $item = Koha::Items->find( { barcode => $barcode } );
     my $biblio = Koha::Biblios->find( $item->biblionumber );
 
-    if ( $item ) {
-	$success = DelItem({ itemnumber => $item->id, biblionumber => $item->biblionumber } );
+    if ($item) {
+        $success = DelItem(
+            { itemnumber => $item->id, biblionumber => $item->biblionumber } );
 
         if ( $biblio->items->count == 0 ) {
             DelBiblio( $biblio->id );
         }
 
-        unless ( $success ) {
+        unless ($success) {
             push(
                 @problems,
                 {
@@ -975,7 +990,8 @@ sub delete_item {
                 }
             );
         }
-    } else {
+    }
+    else {
         $success = 0;
 
         push(
@@ -990,9 +1006,9 @@ sub delete_item {
     }
 
     my $result = {
-        success   => $success,
-        problems  => \@problems,
-        item => $item,
+        success  => $success,
+        problems => \@problems,
+        item     => $item,
     };
 
     return $result;
