@@ -69,6 +69,12 @@ sub handle {
                 if ( $medium->[0] ) {
                     $itemdata->{mediumtype} = $medium->[0]->textContent();
                 }
+                my $format = $xpc->find( '//Format', $bibliographic->[0] );
+                if ( $format->[0] ) {
+                    my $f = $format->[0]->textContent();
+                    my $itemtype = $config->{itemtype_map}->{$f};
+                    $itemdata->{itemtype} = $itemtype if $itemtype;
+                }
             }
 
             # accept the item
@@ -111,6 +117,12 @@ sub handle {
                 my $medium = $xpc->find( '//ns:Mediumtype', $bibliographic->[0] );
                 if ( $medium->[0] ) {
                     $itemdata->{mediumtype} = $medium->[0]->textContent();
+                }
+                my $format = $xpc->find( '//ns:Format', $bibliographic->[0] );
+                if ( $format->[0] ) {
+                    my $f = $format->[0]->textContent();
+                    my $itemtype = $config->{itemtype_map}->{$f};
+                    $itemdata->{itemtype} = $itemtype if $itemtype;
                 }
             }
         }

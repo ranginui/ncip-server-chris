@@ -24,13 +24,15 @@ use MARC::Field;
 use C4::Auth qw{
   checkpw_hash
 };
-use C4::Branch qw{
-  GetBranchesLoop
-};
+#use C4::Branch qw{
+#  GetBranchesLoop
+#};
+use Koha::Libraries;
 use C4::Members qw{
   GetMemberDetails
-  IsMemberBlocked
 };
+#  IsMemberBlocked
+use Koha::Patrons;
 use C4::Circulation qw{
   AddReturn
   CanBookBeIssued
@@ -107,8 +109,17 @@ sub userdata {
 
     return unless $userdata;
 
-    my ( $block_status, $count ) =
-      IsMemberBlocked( $userdata->{borrowernumber} );
+my $block_status;
+my $patron = Koha::Patrons->find( $userdata->{borrowernumber} );
+if ( my $debarred_date = $patron->is_debarred ) {
+$block_status = $debarred_date;
+}
+elsif ( my $num_overdues = $patron->has_overdues ){
+$block_status = $num_overdues;
+}
+else {
+$block_status=0;
+}
     $userdata->{restricted} = $block_status;
 
     return $userdata;
@@ -741,11 +752,12 @@ sub acceptitem {
 
     my ( $field, $subfield ) = GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
     my $fieldslib = C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
-    my $itemtype = $fieldslib->{$field}{$subfield}{defaultvalue};
+    my $itemtype = $iteminfo->{itemtype} || $fieldslib->{$field}{$subfield}{defaultvalue};
 
     unless ($branchcode) {
-        my $branches = GetBranchesLoop();
-        if ( @$branches > 1 ) {
+#        my $branches = GetBranchesLoop();
+        my @branches = Koha::Libraries->search();
+        if ( @branches > 1 ) {
             return {
                 success  => 0,
                 problems => [
@@ -758,7 +770,8 @@ sub acceptitem {
             };
         }
         else {
-            $branchcode = $branches->[0]->{branchcode};
+#            $branchcode = $branches->[0]->{branchcode};
+            $branchcode = $branches[0]->{branchcode};
         }
     }
 
