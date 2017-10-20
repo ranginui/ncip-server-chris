@@ -51,3 +51,8 @@ koha:
   # AcceptItem places a hold, if this is enabled, a CheckIn message will set the hold to waiting or in transit
   # this setting implies no_error_on_return_without_checkout
   trap_hold_on_checkin: 1
+
+  # Sets the itemtype based on ItemOptionalFields/Format, format is "ItemFormat: KohaItemType"
+  itemtype_map:
+    DVD: ILL1WK
+    CD: ILL1WK
