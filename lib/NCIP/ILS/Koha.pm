@@ -255,6 +255,8 @@ sub checkout {
 
         my $reasons = { %$error, %$confirm };
 
+        delete $reasons->{DEBT} if C4::Context->preference('AllowFineOverride');
+
         if (%$reasons) {
             my @problems;
 
