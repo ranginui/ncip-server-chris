@@ -24,9 +24,6 @@ use MARC::Field;
 use C4::Auth qw{
   checkpw_hash
 };
-use C4::Members qw{
-  GetMemberDetails
-};
 
 #  IsMemberBlocked
 use Koha::Patrons;
@@ -47,9 +44,7 @@ use C4::Reserves qw{
   CanBookBeReserved
   CanItemBeReserved
   AddReserve
-  GetReservesFromItemnumber
   CancelReserve
-  GetReservesFromBiblionumber
   GetReserveStatus
   ModReserveAffect
 };
@@ -104,12 +99,13 @@ sub itemdata {
 sub userdata {
     my $self     = shift;
     my $userid   = shift;
-    my $userdata = GetMemberDetails( undef, $userid );
 
-    return unless $userdata;
+    my $patron = Koha::Patrons->find( { cardnumber => $userid } );
+    $patron ||= Koha::Patrons->find( { userid => $userid } );
+
+    return unless $patron;
 
     my $block_status;
-    my $patron = Koha::Patrons->find( $userdata->{borrowernumber} );
     if ( my $debarred_date = $patron->is_debarred ) {
         $block_status = $debarred_date;
     }
@@ -119,9 +115,12 @@ sub userdata {
     else {
         $block_status = 0;
     }
-    $userdata->{restricted} = $block_status;
 
-    return $userdata;
+    my $patron_hashref = $patron->unblessed;
+
+    $patron_hashref->{restricted} = $block_status;
+
+    return $patron_hashref;
 }
 
 sub userenv {    #FIXME: This really needs to be in a config file
@@ -244,14 +243,16 @@ sub checkout {
     my $barcode  = shift;
     my $date_due = shift;
 
-    my $borrower = GetMemberDetails( undef, $userid );
+    my $patron = Koha::Patrons->find( { cardnumber => $userid } );
+    $patron ||= Koha::Patrons->find( { userid => $userid } );
+
     my $item = GetItem( undef, $barcode );
 
     $self->userenv( $item->{holdingbranch} );
 
-    if ($borrower) {
+    if ($patron) {
         my ( $error, $confirm ) =
-          CanBookBeIssued( $borrower, $barcode, $date_due );
+          CanBookBeIssued( $patron->unblessed, $barcode, $date_due );
 
         my $reasons = { %$error, %$confirm };
 
@@ -377,7 +378,7 @@ sub checkout {
             return { success => 0, problems => \@problems };
         }
         else {
-            my $issue = AddIssue( $borrower, $barcode, $date_due );
+            my $issue = AddIssue( $patron->unblessed, $barcode, $date_due );
             $date_due = $issue->date_due();
             $date_due =~ s/ /T/;
             return {
@@ -405,7 +406,8 @@ sub renew {
     my $barcode = shift;
     my $userid  = shift;
 
-    my $borrower = GetMemberDetails( undef, $userid );
+    my $patron = Koha::Patrons->find( { cardnumber => $userid } );
+    $patron ||= Koha::Patrons->find( { userid => $userid } );
     return {
         success  => 0,
         problems => [
@@ -417,7 +419,7 @@ sub renew {
             }
         ]
       }
-      unless $borrower;
+      unless $patron;
 
     my $item = GetItem( undef, $barcode );
     return {
@@ -434,7 +436,7 @@ sub renew {
       unless $item;
 
     my ( $ok, $error ) =
-      CanBookBeRenewed( $borrower->{borrowernumber}, $item->{itemnumber} );
+      CanBookBeRenewed( $patron->borrowernumber, $item->{itemnumber} );
 
     $error //= q{};
 
@@ -482,7 +484,7 @@ sub renew {
       if $error;    # Generic message for all other reasons
 
     my $datedue =
-      AddRenewal( $borrower->{borrowernumber}, $item->{itemnumber} );
+      AddRenewal( $patron->borrowernumber, $item->{itemnumber} );
 
     return {
         success => 1,
@@ -492,13 +494,14 @@ sub renew {
 
 sub request {
     my $self         = shift;
-    my $cardnumber   = shift;
+    my $userid       = shift;
     my $barcode      = shift;
     my $biblionumber = shift;
     my $type         = shift;
     my $branchcode   = shift;
 
-    my $borrower = GetMemberDetails( undef, $cardnumber );
+    my $patron = Koha::Patrons->find( { cardnumber => $userid } );
+    $patron ||= Koha::Patrons->find( { userid => $userid } );
 
     return {
         success  => 0,
@@ -507,17 +510,17 @@ sub request {
                 problem_type    => 'Unknown User',
                 problem_detail  => 'User is not known.',
                 problem_element => 'UserIdentifierValue',
-                problem_value   => $cardnumber,
+                problem_value   => $userid,
             }
         ]
       }
-      unless $borrower;
+      unless $patron;
 
     #FIXME: Maybe this should be configurable?
     # If no branch is given, fall back to patron home library
     $branchcode ||= q{};
     $branchcode =~ s/^\s+|\s+$//g;
-    $branchcode ||= $borrower->{branchcode};
+    $branchcode ||= $patron->branchcode;
     return {
         success  => 0,
         problems => [
@@ -599,7 +602,7 @@ sub request {
 
     $self->userenv();
 
-    my $borrowernumber = $borrower->{borrowernumber};
+    my $borrowernumber = $patron->borrowernumber;
     my $itemnumber     = $itemdata->{itemnumber};
 
     my $can_reserve =
@@ -610,7 +613,7 @@ sub request {
     if ( $can_reserve eq 'OK' ) {
         my $request_id = AddReserve(
             $branchcode,
-            $borrower->{borrowernumber},
+            $borrowernumber,
             $biblionumber,
             my $bibitems,
             my $priority = 1,
@@ -741,7 +744,7 @@ sub cancelrequest {
 sub acceptitem {
     my $self       = shift;
     my $barcode    = shift;
-    my $user       = shift;
+    my $userid     = shift;
     my $action     = shift;
     my $create     = shift;
     my $iteminfo   = shift;
@@ -856,21 +859,24 @@ sub acceptitem {
 
     # find hold and get branch for that, check in there
     my $itemdata = GetItem( undef, $barcode );
+    my $item = Koha::Items->find( { barcode => $barcode } );
 
-    my ( $reservedate, $borrowernumber, $branchcode2, $reserve_id, $wait ) =
-      GetReservesFromItemnumber( $itemdata->{'itemnumber'} );
+    my $holds = $item->holds_placed_before_today;
+    my $first_hold = $holds->next;
+    my $reserve_id = $first_hold ? $first_hold->reserve_id : undef;
 
     # now we have to check the requested action
     if ( $action =~ /^Hold For Pickup/ || $action =~ /^Circulate/ ) {
         unless ($reserve_id) {
 
             # no reserve, place one
-            if ($user) {
-                my $borrower = GetMemberDetails( undef, $user );
-                if ($borrower) {
+            if ($userid) {
+                my $patron = Koha::Patrons->find( { cardnumber => $userid } );
+                $patron ||= Koha::Patrons->find( { userid => $userid } );
+                if ($patron) {
                     AddReserve(
                         $branchcode,
-                        $borrower->{'borrowernumber'},
+                        $patron->borrowernumber,
                         $itemdata->{biblionumber},
                         [$biblioitemnumber],
                         1,
@@ -891,7 +897,7 @@ sub acceptitem {
                                 problem_type    => 'Unknown User',
                                 problem_detail  => 'User is not known.',
                                 problem_element => 'UserIdentifierValue',
-                                problem_value   => $user,
+                                problem_value   => $userid,
                             }
                         ]
                     };
@@ -905,7 +911,7 @@ sub acceptitem {
                             problem_type    => 'Unknown User',
                             problem_detail  => 'User is not known.',
                             problem_element => 'UserIdentifierValue',
-                            problem_value   => $user,
+                            problem_value   => $userid,
                         }
                     ]
                 };
