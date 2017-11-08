@@ -861,7 +861,7 @@ sub acceptitem {
     my $itemdata = GetItem( undef, $barcode );
     my $item = Koha::Items->find( { barcode => $barcode } );
 
-    my $holds = $item->holds_placed_before_today;
+    my $holds = $item->current_holds;
     my $first_hold = $holds->next;
     my $reserve_id = $first_hold ? $first_hold->reserve_id : undef;
 
