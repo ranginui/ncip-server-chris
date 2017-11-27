@@ -758,6 +758,7 @@ sub acceptitem {
     my $item_branchcode = $config->{item_branchcode} || $branchcode;
     my $always_generate_barcode = $config->{always_generate_barcode} || 0;
     my $barcode_prefix          = $config->{barcode_prefix}          || q{};
+    my $replacement_price       = $config->{replacement_price}       || q{};
 
     my ( $field, $subfield ) =
       GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
@@ -848,10 +849,11 @@ sub acceptitem {
         }
 
         my $item = {
-            'barcode'       => $barcode,
-            'holdingbranch' => $item_branchcode,
-            'homebranch'    => $item_branchcode,
-            'itype'         => $itemtype,
+            barcode          => $barcode,
+            holdingbranch    => $item_branchcode,
+            homebranch       => $item_branchcode,
+            itype            => $itemtype,
+            replacementprice => $replacement_price,
         };
         ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode )
           = AddItem( $item, $biblionumber );

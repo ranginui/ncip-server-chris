@@ -56,3 +56,6 @@ koha:
   itemtype_map:
     DVD: ILL1WK
     CD: ILL1WK
+
+  # Set a default replacement price for items
+  replacement_price: 125.00
