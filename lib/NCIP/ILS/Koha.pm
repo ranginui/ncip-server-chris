@@ -160,16 +160,12 @@ sub checkin {
     my ( $success, $messages, $issue, $borrower ) =
       AddReturn( $barcode, $branch, $exempt_fine, $dropbox );
 
-    warn "MESSAGES: " . Data::Dumper::Dumper($messages);
-
     my @problems;
 
     $success ||= 1 if $messages->{LocalUse};
 
     if ( $messages->{NotIssued} ) {
-        if (   $config->{no_error_on_return_without_checkout}
-            || $config->{trap_hold_on_checkin} )
-        {
+        if ( $config->{no_error_on_return_without_checkout} || $config->{trap_hold_on_checkin} ) {
             $success ||= 1;
         }
         else {
@@ -754,11 +750,12 @@ sub acceptitem {
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
 
-    my $frameworkcode   = $config->{framework}       || 'FA';
-    my $item_branchcode = $config->{item_branchcode} || $branchcode;
+    my $frameworkcode           = $config->{framework}               || 'FA';
+    my $item_branchcode         = $config->{item_branchcode}         || $branchcode;
     my $always_generate_barcode = $config->{always_generate_barcode} || 0;
     my $barcode_prefix          = $config->{barcode_prefix}          || q{};
     my $replacement_price       = $config->{replacement_price}       || q{};
+    my $trap_hold_on_checkin    = $config->{trap_hold_on_checkin}    // 1;
 
     my ( $field, $subfield ) =
       GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
@@ -788,7 +785,7 @@ sub acceptitem {
     }
 
     $self->userenv();    # set userenvironment
-    my ( $biblionumber, $biblioitemnumber );
+    my ( $itemnumber, $biblionumber, $biblioitemnumber );
     if ($create) {
         my $record;
 
@@ -831,7 +828,6 @@ sub acceptitem {
 
         ( $biblionumber, $biblioitemnumber ) =
           AddBiblio( $record, $frameworkcode );
-        my $itemnumber;
 
         if ($barcode_prefix) {
             $barcode = $barcode_prefix . $barcode;
@@ -859,51 +855,41 @@ sub acceptitem {
           = AddItem( $item, $biblionumber );
     }
 
-    # find hold and get branch for that, check in there
-    my $itemdata = GetItem( undef, $barcode );
-    my $item = Koha::Items->find( { barcode => $barcode } );
-
+    my $item = Koha::Items->find( $itemnumber );
     my $holds = $item->current_holds;
     my $first_hold = $holds->next;
     my $reserve_id = $first_hold ? $first_hold->reserve_id : undef;
 
-    # now we have to check the requested action
+    my $patron = Koha::Patrons->find( { cardnumber => $userid } );
+    $patron ||= Koha::Patrons->find( { userid => $userid } );
+
+    # Now we have to check the requested action
     if ( $action =~ /^Hold For Pickup/ || $action =~ /^Circulate/ ) {
-        unless ($reserve_id) {
-
-            # no reserve, place one
-            if ($userid) {
-                my $patron = Koha::Patrons->find( { cardnumber => $userid } );
-                $patron ||= Koha::Patrons->find( { userid => $userid } );
-                if ($patron) {
-                    AddReserve(
-                        $branchcode,
-                        $patron->borrowernumber,
-                        $itemdata->{biblionumber},
-                        [$biblioitemnumber],
-                        1,
-                        undef,
-                        undef,
-                        'Placed By ILL',
-                        '',
-                        $itemdata->{'itemnumber'},
-                        undef
-                    );
-                }
-
-                else {
-                    return {
-                        success  => 0,
-                        problems => [
-                            {
-                                problem_type    => 'Unknown User',
-                                problem_detail  => 'User is not known.',
-                                problem_element => 'UserIdentifierValue',
-                                problem_value   => $userid,
-                            }
-                        ]
-                    };
-                }
+        if ($reserve_id) { # There shouldn't be a hold already, abort if there is one
+            return {
+                problem_type =>
+                  'Check Out Not Allowed - Item Has Outstanding Requests',
+                problem_detail => 'Check out of Item cannot proceed '
+                  . 'because the Item has outstanding requests.',
+                problem_element => 'ItemIdentifierValue',
+                problem_value   => $barcode,
+            };
+        }
+        else { # Place hold
+            if ($userid && $patron) { # Check userid as well as patron in case username "" exists
+                $reserve_id = AddReserve(
+                    $branchcode,
+                    $patron->borrowernumber,
+                    $biblionumber,
+                    [$biblioitemnumber],
+                    1,
+                    undef,
+                    undef,
+                    'Placed By ILL',
+                    '',
+                    $itemnumber,
+                    undef
+                );
             }
             else {
                 return {
@@ -920,30 +906,12 @@ sub acceptitem {
             }
         }
     }
-    else {
-        unless ($reserve_id) {
 
-        #FIXME: This message is not technically valid for the AcceptItem message
-        # but I do not see a more appropriate Problem definition available
-            return {
-                problem_type =>
-                  'Check Out Not Allowed - Item Has Outstanding Requests',
-                problem_detail => 'Check out of Item cannot proceed '
-                  . 'because the Item has outstanding requests.',
-                problem_element => 'ItemIdentifierValue',
-                problem_value   => $barcode,
-            };
-        }
-    }
-
-    # we do this because we are only doing the return to trigger the hold
-    my ( $success, $messages, $issue, $borrower ) =
-      AddReturn( $barcode, $item_branchcode, undef, undef );
+    # If hold should be trapped on checkin, it should be trapped at this time as well
+    my ( $success, $messages, $issue, $borrower ) = AddReturn( $barcode, $item_branchcode, undef, undef );
     $success = $messages->{'NotIssued'} ? 1 : 0;
-    my $problems =
-      $success
-      ? []
-      : [
+
+    my $problems = $success ? [] : [
         {
             problem_type   => 'Temporary Processing Failure',
             problem_detail => 'Request was placed for user but return of '
@@ -951,7 +919,18 @@ sub acceptitem {
             problem_element => 'ItemIdentifierValue',
             problem_value   => $barcode,
         }
-      ];
+    ];
+
+    if ( $success && $trap_hold_on_checkin ) {
+        my $transferToDo = $item->holdingbranch ne $item->homebranch;
+        ModReserveAffect( $itemnumber, $patron->id, $transferToDo, $reserve_id );
+
+        if ($transferToDo) {
+           my $from_branch = $item->holdingbranch;
+           my $to_branch   = $branchcode;
+           ModItemTransfer( $itemnumber, $from_branch, $to_branch );
+        }
+    }
 
     return {
         success    => $success,
