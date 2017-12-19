@@ -46,10 +46,13 @@ koha:
   barcode_prefix: 'prefix'
 
   # Instead of giving an error on returning a non-checked out item, just return a success message
-  no_error_on_return_without_checkout: 0
+  no_error_on_return_without_checkout: 1
 
-  # AcceptItem places a hold, if this is enabled, a CheckIn message will set the hold to waiting or in transit
+  # AcceptItem places a hold, if this is not enabled, a CheckIn message will set the hold to waiting or in transit
   # this setting implies no_error_on_return_without_checkout
+  trap_hold_on_accept_item: 1
+
+  # Traps holds only for a CheckIn message, if trap_hold_on_accept_item is not enabled this should be
   trap_hold_on_checkin: 1
 
   # Sets the itemtype based on ItemOptionalFields/Format, format is "ItemFormat: KohaItemType"

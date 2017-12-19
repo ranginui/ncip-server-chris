@@ -756,7 +756,7 @@ sub acceptitem {
     my $barcode_prefix          = $config->{barcode_prefix}          || q{};
     my $replacement_price       = $config->{replacement_price}       || q{};
     my $item_callnumber         = $config->{item_callnumber}         || q{};
-    my $trap_hold_on_checkin    = $config->{trap_hold_on_checkin}    // 1;
+    my $trap_hold_on_accept_item = $config->{trap_hold_on_accept_item} // 1;
 
     my ( $field, $subfield ) =
       GetMarcFromKohaField( 'biblioitems.itemtype', $frameworkcode );
@@ -923,7 +923,7 @@ sub acceptitem {
         }
     ];
 
-    if ( $success && $trap_hold_on_checkin ) {
+    if ( $success && $trap_hold_on_accept_item ) {
         my $transferToDo = $item->holdingbranch ne $item->homebranch;
         ModReserveAffect( $itemnumber, $patron->id, $transferToDo, $reserve_id );
 
