@@ -755,6 +755,7 @@ sub acceptitem {
     my $always_generate_barcode = $config->{always_generate_barcode} || 0;
     my $barcode_prefix          = $config->{barcode_prefix}          || q{};
     my $replacement_price       = $config->{replacement_price}       || q{};
+    my $item_callnumber         = $config->{item_callnumber}         || q{};
     my $trap_hold_on_checkin    = $config->{trap_hold_on_checkin}    // 1;
 
     my ( $field, $subfield ) =
@@ -850,6 +851,7 @@ sub acceptitem {
             homebranch       => $item_branchcode,
             itype            => $itemtype,
             replacementprice => $replacement_price,
+            itemcallnumber   => $item_callnumber,
         };
         ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode )
           = AddItem( $item, $biblionumber );
