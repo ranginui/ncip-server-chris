@@ -4,7 +4,6 @@ use NCIP::Handler;
 use Modern::Perl;
 use XML::LibXML;
 use Try::Tiny;
-use XML::Tidy::Tiny qw{ xml_tidy };
 use Module::Load;
 use Template;
 use Log::Log4perl;
@@ -57,7 +56,6 @@ sub process_request {
     my $xml    = shift;
     my $config = shift;
 
-    warn "REQUEST:\n*" . xml_tidy($xml) . "*";
     my ( $request_type, $ncip_version ) = $self->handle_initiation($xml);
     $self->{ncip_protocol_version} = $ncip_version;
 
@@ -80,7 +78,7 @@ sub process_request {
         }
     );
 
-    return xml_tidy( $handler->handle( $self->xmldoc ) );
+    return $handler->handle( $self->xmldoc );
 }
 
 =head2 handle_initiation
@@ -96,8 +94,6 @@ sub handle_initiation {
     if ($@) {
         $log->info("Invalid xml we can not parse it ");
     }
-
-    $log->info( sub { "INCOMING XML:\n" . xml_tidy($xml) } );
 
     if ($dom) {
 
