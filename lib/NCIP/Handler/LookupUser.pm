@@ -23,6 +23,9 @@ our @ISA = qw(NCIP::Handler);
 sub handle {
     my $self   = shift;
     my $xmldoc = shift;
+
+    my $config = $self->{config}->{koha};
+
     if ($xmldoc) {
 
         # Given our xml document, lets find our userid
@@ -133,6 +136,8 @@ sub handle {
                     to_agency    => $from,
                     elements     => $elements,
                     user         => $user,
+                    user_id      => $user_id,
+                    config       => $config,
                 }
             );
         }

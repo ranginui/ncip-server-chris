@@ -1,5 +1,14 @@
 <UserId>
-    <UserIdentifierValue>[% user.userdata.cardnumber | xml %]</UserIdentifierValue>
+    [%- SWITCH config.lookup_user_id -%]
+    [%- CASE 'same' -%]
+	<UserIdentifierValue>[% user_id | xml %]</UserIdentifierValue>
+    [%- CASE 'cardnumber' -%]
+	<UserIdentifierValue>[% user.userdata.cardnumber | xml %]</UserIdentifierValue>
+    [%- CASE 'userid' -%]
+	<UserIdentifierValue>[% user.userdata.userid | xml %]</UserIdentifierValue>
+    [%- CASE -%]
+        ERROR: lookup_user_id is set to an invalid value!
+    [%- END -%]
 </UserId>
 
 [%# <UserFiscalAccount></UserFiscalAccount>
@@ -103,8 +112,7 @@ RequestedItem
                 <AgencyUserPrivilegeType>STATUS</AgencyUserPrivilegeType>
                 <UserPrivilegeStatus>
                     [%- FILTER collapse -%]
-                        <UserPrivilegeStatusType>
-                            [%- FILTER trim -%]
+                        <UserPrivilegeStatusType>[%- FILTER collapse -%]
                                 [%- IF user.userdata.restricted < 0 -%]
                                     Delinquent
                                 [%- ELSIF user.userdata.restricted > 0 -%]
@@ -112,16 +120,17 @@ RequestedItem
                                 [%- ELSE -%]
                                     Ok
                                 [%- END -%]
-                            [%- END -%]
-                        </UserPrivilegeStatusType>
+                        [%- END -%]</UserPrivilegeStatusType>
                     [%- END -%]
                 </UserPrivilegeStatus>
             </UserPrivilege>
         [%- END -%]
     [%- END -%]
 
-    <UserId>
-        <UserIdentifierType>Primary Key</UserIdentifierType>
-        <UserIdentifierValue>[% user.userdata.borrowernumber %]</UserIdentifierValue>
-    </UserId>
+    [%- IF do_not_include_user_identifier_primary_key -%]
+        <UserId>
+            <UserIdentifierType>Primary Key</UserIdentifierType>
+            <UserIdentifierValue>[% user.userdata.borrowernumber %]</UserIdentifierValue>
+        </UserId>
+    [%- END -%]
 </UserOptionalFields>
