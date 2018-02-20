@@ -750,12 +750,15 @@ sub acceptitem {
     $branchcode =~ s/^\s+|\s+$//g;
     $branchcode = "$branchcode";    # Convert XML::LibXML::NodeList to string
 
-    my $frameworkcode           = $config->{framework}               || 'FA';
-    my $item_branchcode         = $config->{item_branchcode}         || $branchcode;
-    my $always_generate_barcode = $config->{always_generate_barcode} || 0;
-    my $barcode_prefix          = $config->{barcode_prefix}          || q{};
-    my $replacement_price       = $config->{replacement_price}       || q{};
-    my $item_callnumber         = $config->{item_callnumber}         || q{};
+    my $frameworkcode            = $config->{framework}                || 'FA';
+    my $item_branchcode          = $config->{item_branchcode}          || $branchcode;
+    my $always_generate_barcode  = $config->{always_generate_barcode}  || 0;
+    my $barcode_prefix           = $config->{barcode_prefix}           || q{};
+    my $replacement_price        = $config->{replacement_price}        || q{};
+    my $item_callnumber          = $config->{item_callnumber}          || q{};
+    my $item_itemtype            = $config->{item_itemtype}            || q{};
+    my $item_ccode               = $config->{item_ccode}               || q{};
+    my $item_location            = $config->{item_location}            || q{};
     my $trap_hold_on_accept_item = $config->{trap_hold_on_accept_item} // 1;
 
     my ( $field, $subfield ) =
@@ -763,7 +766,7 @@ sub acceptitem {
     my $fieldslib =
       C4::Biblio::GetMarcStructure( 1, $frameworkcode, { unsafe => 1 } );
     my $itemtype =
-      $iteminfo->{itemtype} || $fieldslib->{$field}{$subfield}{defaultvalue};
+      $iteminfo->{itemtype} || $fieldslib->{$field}{$subfield}{defaultvalue} || $item_itemtype;
 
     unless ($branchcode) {
         my @branches = Koha::Libraries->search();
@@ -852,6 +855,8 @@ sub acceptitem {
             itype            => $itemtype,
             replacementprice => $replacement_price,
             itemcallnumber   => $item_callnumber,
+            ccode            => $item_ccode,
+            location         => $item_location,
         };
         ( $biblionumber, $biblioitemnumber, $itemnumber, undef, $frameworkcode )
           = AddItem( $item, $biblionumber );
