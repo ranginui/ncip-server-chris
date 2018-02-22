@@ -2,6 +2,12 @@
 
 ## Installation
 
+### Package sites, become the instance user
+
+```bash
+sudo koha-shell <instance>
+```
+
 ### Clone the git repository for the NCIP server
 
 ```bash
