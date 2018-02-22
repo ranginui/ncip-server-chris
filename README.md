@@ -2,7 +2,7 @@
 
 ## Installation
 
-### Package sites, become the instance user
+### For package sites, become the instance user
 
 ```bash
 sudo koha-shell <instance>
@@ -12,6 +12,12 @@ sudo koha-shell <instance>
 
 ```bash
 git clone https://github.com/bywatersolutions/ncip-server.git
+```
+
+### Become your own user again
+
+```bash
+exit
 ```
 
 ### Install dependancies
@@ -26,6 +32,12 @@ Install the ncip-server dependancies using cpanm
 sudo cpanm --installdeps .
 ```
 
+### For package sites, become the instance user
+
+```bash
+sudo koha-shell <instance>
+```
+
 ### Set up config.yml
 
 Copy the config.yml.example file to config.yml
@@ -36,6 +48,12 @@ cp config.yml.example config.yml
 ```
 
 Edit the `views: "/path/to/ncip-server/templates/"` line to point to the actual path you have the ncip-server template directory at. For whatever reason, this must be an absolute path and must be configured on a per-installation basis.
+
+### Become your own user again
+
+```bash
+exit
+```
 
 ### Set up the Init script
 
