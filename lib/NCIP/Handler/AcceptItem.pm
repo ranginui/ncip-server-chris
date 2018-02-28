@@ -36,6 +36,8 @@ sub handle {
 
         if ( $self->{ncip_version} == 1 ) {
             $itemid = $xpc->find( '//ItemIdentifierValue', $root );
+            $itemid = $xpc->find( '//RequestIdentifierValue', $root ) if $config->{request_identifier_value_as_barcode};
+
             ($action) = $xpc->find( '//RequestedActionType//Value', $root );
             $request_agency =
               $xpc->find( '//FromAgencyId/UniqueAgencyId/Value', $root );
@@ -81,6 +83,8 @@ sub handle {
         }
         else {    # $version == 2
             $itemid = $xpc->find( '//ns:ItemIdentifierValue', $root );
+            $itemid = $xpc->find( '//ns:RequestIdentifierValue', $root ) if $config->{request_identifier_value_as_barcode};
+
             ($action)  = $xpc->findnodes( '//ns:RequestedActionType', $root );
             ($request) = $xpc->findnodes( '//ns:RequestId',           $root );
             $request_agency = $xpc->find( 'ns:AgencyId', $request );
