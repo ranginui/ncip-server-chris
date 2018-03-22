@@ -64,7 +64,7 @@ sudo cp init-script-template /etc/init.d/ncip-server
 
 Edit the file you just created:
 * Update the line `export KOHA_CONF="/path/to/koha-conf.xml"` to point to your production `koha-conf.xml` file. 
-* Update the line `HOME_DIR="/home/koha"` to point to the Koha home directory. For Koha package installtions, that would be /var/lib/koha/<instancename>
+* Update the line `HOME_DIR="/home/koha"` to point to the Koha home directory. For Koha package installtions, that would be /var/lib/koha/<instancename> . For git installs it will be the home directory of the user that contains the Koha git clone.
 * Update various other path definitions as necessary
 * You may also change the port to a different port if 3001 is already being used on your server.
 
