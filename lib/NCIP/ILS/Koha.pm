@@ -44,7 +44,6 @@ use C4::Reserves qw{
   CanBookBeReserved
   CanItemBeReserved
   AddReserve
-  CancelReserve
   GetReserveStatus
   ModReserveAffect
 };
@@ -729,7 +728,8 @@ sub cancelrequest {
     my $self       = shift;
     my $request_id = shift;
 
-    CancelReserve( { reserve_id => $request_id } );
+    my $hold = Koha::Holds->find( $request_id );
+    $hold->cancel();
 
     return {
         success    => 1,
