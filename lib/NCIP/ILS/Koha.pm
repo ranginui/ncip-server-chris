@@ -75,7 +75,7 @@ sub itemdata {
         my $biblio = GetBiblioData( $item->{itemnumber} );
         $item->{biblio} = $biblio;
 
-        my $record = GetMarcBiblio( $item->{biblionumber} );
+        my $record = GetMarcBiblio({ biblionumber => $item->{biblionumber}});
         $item->{record} = $record;
 
         my $itemtype = Koha::Database->new()->schema()->resultset('Itemtype')
