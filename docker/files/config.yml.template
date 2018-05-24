@@ -1,0 +1,81 @@
+# This is the main configuration file of your Dancer app
+# env-related settings should go to environments/$env.yml
+# all the settings in this file will be loaded at Dancer's startup.
+
+# Your application's name
+appname: "NCIP::Dancing"
+
+views: "/app/templates/"
+
+# The default layout to use for your application (located in
+# views/layouts/main.tt)
+layout: "main"
+
+# when the charset is set to UTF-8 Dancer will handle for you
+# all the magic of encoding and decoding. You should not care
+# about unicode within your app when this setting is set (recommended).
+charset: "UTF-8"
+
+# template engine
+# simple: default and very basic template engine
+# template_toolkit: TT
+
+#template: "simple"
+
+template: "template_toolkit"
+engines:
+   template_toolkit:
+     start_tag: '[%'
+     end_tag:   '%]'
+
+# default MIME type for the responses.
+# (See ANSI/NISO Z39.83-2-2012 Section 7.3, page 13.)
+default_mime_type: "application/xml; charset='utf-8'"
+
+koha:
+  # Framework to use when creating records
+  framework: 'FA'
+
+  # Optional setting to force the item created to have a given home/holding branch
+  item_branchcode: 'MPL'
+
+  # If enabled, NCIP will always generate a new barcode even if the requested barcode is not used via AcceptItem
+  always_generate_barcode: 0
+
+  # Always add the defined prefix to the beginning of any incoming barcodes via AcceptItem
+  barcode_prefix: 'prefix'
+
+  # Instead of giving an error on returning a non-checked out item, just return a success message
+  no_error_on_return_without_checkout: 1
+
+  # AcceptItem places a hold, if this is not enabled, a CheckIn message will set the hold to waiting or in transit
+  # this setting implies no_error_on_return_without_checkout
+  trap_hold_on_accept_item: 1
+
+  # Traps holds only for a CheckIn message, if trap_hold_on_accept_item is not enabled this should be
+  trap_hold_on_checkin: 1
+
+  # Sets the itemtype based on ItemOptionalFields/Format, format is "ItemFormat: KohaItemType"
+  itemtype_map:
+    DVD: ILL1WK
+    CD: ILL1WK
+
+  # Set a default replacement price for items
+  replacement_price: 125.00
+
+  # Set a defaults for items
+  #item_callnumber: 'ILL'
+  #item_itemtype: 'ITYPE'
+  #item_ccode: 'CCODE'
+  #item_location: 'LOC'
+
+  # If true, don't send the borrowernumber in a UserId block
+  do_not_include_user_identifier_primary_key: 0
+
+  # Patron 'ID' to send back, options are 'cardnumber', 'userid', 'same'
+  # 'same' will send back whatever id was sent to the server for the lookup
+  lookup_user_id: 'cardnumber'
+
+  # If this option is enabled, items created by AcceptItem will use AcceptItem/RequestId/RequestIdentifierValue
+  # as the barcode instead of AcceptItem/ItemId/ItemIdentifierValue
+  #request_identifier_value_as_barcode: 1
