@@ -84,8 +84,8 @@ ProxyPassReverse /ncip  http://127.0.0.1:3001 retry=0
 ```bash
 LoadModule proxy_module /usr/lib/apache2/modules/mod_proxy.so
 LoadModule proxy_http_module /usr/lib/apache2/modules/mod_proxy_http.so
-ProxyPass /ncip http://127.0.0.1:3001 retry=0
-ProxyPassReverse /ncip  http://127.0.0.1:3001 retry=0
+ProxyPass /ncip http://127.0.0.1:3000 retry=0
+ProxyPassReverse /ncip  http://127.0.0.1:3000 retry=0
 ```
 
 ### Start the server!
