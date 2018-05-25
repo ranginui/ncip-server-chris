@@ -76,8 +76,8 @@ sudo update-rc.d ncip-server defaults
 
 Modify you Koha Apache configuration, in the Intranet section, add the following:
 ```apache
-ProxyPass /ncip http://127.0.0.1:3001 retry=0
-ProxyPassReverse /ncip  http://127.0.0.1:3001 retry=0
+ProxyPass /ncip http://127.0.0.1:3000 retry=0
+ProxyPassReverse /ncip  http://127.0.0.1:3000 retry=0
 ```
 
 ### Enable ModProxy for apache
