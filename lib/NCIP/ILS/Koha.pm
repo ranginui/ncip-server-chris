@@ -72,7 +72,7 @@ sub itemdata {
     my $item = GetItem( undef, $barcode );
 
     if ($item) {
-        my $biblio = GetBiblioData( $item->{itemnumber} );
+        my $biblio = GetBiblioData( $item->{biblionumber} );
         $item->{biblio} = $biblio;
 
         my $record = GetMarcBiblio({ biblionumber => $item->{biblionumber}});
