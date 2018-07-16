@@ -530,8 +530,7 @@ sub request {
       }
       unless $branchcode;
 
-    my $itemdata;
-    $itemdata = GetItem( undef, $barcode );
+    my $itemdata = $barcode ? GetItem( undef, $barcode ) : undef;
 
     if ($barcode) {
         return {
