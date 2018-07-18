@@ -1,8 +1,8 @@
-package NCIP::Handler::CheckInItem;
+package NCIP::Handler::DeleteItem;
 
 =head1
 
-  NCIP::Handler::CheckInItem
+  NCIP::Handler::DeleteItem
 
 =head1 SYNOPSIS
 
@@ -39,7 +39,7 @@ sub handle {
         my $branch = undef;    # where the hell do we get this from???
         my ( $from, $to ) = $self->get_agencies($xmldoc);
 
-        my $checkin = $self->ils->checkin(
+        my $deletion = $self->ils->delete_item(
             {
                 barcode => $itemid,
                 branch  => $branch,
@@ -47,16 +47,16 @@ sub handle {
             }
         );
 
-        if ( $checkin->{success} ) {
+        if ( $deletion->{success} ) {
             return $self->render_output(
                 'response.tt',
                 {
-                    message_type => 'CheckInItemResponse',
+                    message_type => 'DeleteItemResponse',
                     barcode      => $itemid,
                     from_agency  => $to,
                     to_agency    => $from,
                     elements     => $self->get_user_elements($xmldoc),
-                    checkin      => $checkin,
+                    deletion     => $deletion,
                 }
             );
         }
@@ -64,8 +64,8 @@ sub handle {
             return $self->render_output(
                 'problem.tt',
                 {
-                    message_type => 'CheckInItemResponse',
-                    problems     => $checkin->{problems},
+                    message_type => 'DeleteItemResponse',
+                    problems     => $deletion->{problems},
 
                 }
             );

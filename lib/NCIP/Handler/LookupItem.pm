@@ -23,27 +23,50 @@ our @ISA = qw(NCIP::Handler);
 sub handle {
     my $self   = shift;
     my $xmldoc = shift;
-    my $item;
-    if ($xmldoc) {
 
-        # Given our xml document, lets find the itemid
+    if ($xmldoc) {
         my ($item_id) =
           $xmldoc->getElementsByTagNameNS( $self->namespace(),
             'ItemIdentifierValue' );
-        $item = NCIP::Item->new(
-            { itemid => $item_id->textContent(), ils => $self->ils } );
-        my ( $itemdata, $error ) = $item->itemdata();
-        if ($error) {
+        $item_id = $item_id->textContent();
 
-            # handle error here
+        my $item = NCIP::Item->new(
+            {
+                itemid => $item_id,
+                ils    => $self->ils,
+            }
+        );
+
+        my $item_data = $item->itemdata();
+
+        if ($item_data) {
+            my $elements = $self->get_item_elements($xmldoc);
+            return $self->render_output(
+                'response.tt',
+                {
+                    message_type => 'LookupItemResponse',
+                    item         => $item_data,
+                    elements     => $elements,
+                }
+            );
         }
-        warn $item->itemid();
+        else {
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'LookupItemResponse',
+                    problems     => [
+                        {
+                            problem_type    => 'Unknown Item',
+                            problem_detail  => 'Item is not known.',
+                            problem_element => 'ItemIdentifierValue',
+                            problem_value   => $item_id,
+                        }
+                    ]
+                }
+            );
+        }
     }
-    my $vars;
-    $vars->{'messagetype'} = 'LookupItemResponse';
-    $vars->{'item'}        = $item;
-    my $output = $self->render_output( 'response.tt', $vars );
-    return $output;
 }
 
 1;

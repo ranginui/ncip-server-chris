@@ -24,36 +24,51 @@ sub handle {
     my $xmldoc = shift;
     if ($xmldoc) {
         my $root = $xmldoc->documentElement();
-        my $xpc  = XML::LibXML::XPathContext->new;
-        $xpc->registerNs( 'ns', $self->namespace() );
+        my $xpc  = $self->xpc();
 
-        my $userid =
-          $xpc->findnodes( 'ns:CheckOutItem/UniqueUserId/UserIdentifierValue',
-            $root );
-        my $itemid =
-          $xpc->findnodes( 'ns:CheckOutItem/UniqueItemId/ItemIdentifierValue',
-            $root );
+        my $userid;
+        my $itemid;
+        my $date_due;
+
+        if ( $self->{ncip_version} == 1 ) {
+            $userid   = $xpc->findnodes( '//UserIdentifierValue', $root );
+            $itemid   = $xpc->findnodes( '//ItemIdentifierValue', $root );
+            $date_due = $xpc->findnodes( '//DesiredDateDue',      $root );
+        } else { # $self->{ncip_version} == 2
+            $userid   = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
+            $itemid   = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+            $date_due = $xpc->findnodes( '//ns:DesiredDateDue',      $root );
+        }
 
         # checkout the item
-        my ( $error, $messages, $datedue ) =
-          $self->ils->checkout( $userid, $itemid );
-        my $vars;
-        my $output;
-        $vars->{'barcode'}     = $itemid;
-        $vars->{'messagetype'} = 'CheckOutItemResponse';
-        if ($error) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $messages;
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+        my $data = $self->ils->checkout( $userid, $itemid, $date_due );
+
+        my ( $from, $to ) = $self->get_agencies($xmldoc);
+
+        if ( $data->{success} ) {
+            my $elements = $self->get_user_elements($xmldoc);
+            return $self->render_output(
+                'response.tt',
+                {
+                    message_type => 'CheckOutItemResponse',
+                    from_agency  => $to,
+                    to_agency    => $from,
+                    barcode      => $itemid,
+                    userid       => $userid,
+                    elements     => $elements,
+                    datedue      => $data->{date_due},
+                }
+            );
         }
         else {
-            my $elements = $self->get_user_elements($xmldoc);
-            $vars->{'elements'} = $elements;
-            $vars->{'datedue'}  = $datedue;
-            $output = $self->render_output( 'response.tt', $vars );
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'CheckOutItemResponse',
+                    problems     => $data->{problems},
+                }
+            );
         }
-        return $output;
     }
 }
 

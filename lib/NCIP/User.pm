@@ -17,23 +17,34 @@ use base qw(Class::Accessor);
 NCIP::User->mk_accessors(qw(userid ils userdata));
 
 sub initialise {
-    my $self = shift;
-    my $ils  = $self->ils;
+    my ($self) = @_;
+
+    my $ils = $self->ils;
+
     my ( $userdata, $error ) = $ils->userdata( $self->userid );
-    $self->{'userdata'} = $userdata;
 
+    $self->{userdata} = $userdata;
 }
 
-sub authentication {
+sub is_valid {
+    my ($self) = @_;
+
+    return $self->{userdata} ? 1 : 0;
 }
 
-sub previous_userids {
-}
+sub authenticate {
+    my ( $self, $params ) = @_;
 
-sub status {
+    my $pin = $params->{pin};
 
-    # Is the user blocked
-    # if so, why
+    return 0 unless $pin;
+
+    return $self->ils->authenticate_patron(
+        {
+            ils_user => $self,
+            pin      => $pin
+        }
+    );
 }
 
 1;

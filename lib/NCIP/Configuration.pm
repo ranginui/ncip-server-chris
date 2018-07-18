@@ -17,7 +17,6 @@ package NCIP::Configuration;
 # with NCIPServer; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
 =head1 NAME
   
   NCIP::Configuration

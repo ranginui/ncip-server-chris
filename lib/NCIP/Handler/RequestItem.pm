@@ -27,32 +27,65 @@ sub handle {
         my $xpc  = XML::LibXML::XPathContext->new;
         $xpc->registerNs( 'ns', $self->namespace() );
 
-        my $userid =
-          $xpc->findnodes( 'ns:RequestItem/UniqueUserId/UserIdentifierValue',
-            $root );
-        my $itemid =
-          $xpc->findnodes( 'ns:RequestItem/UniqueItemId/ItemIdentifierValue',
-            $root );
+        my $userid;
+        my $itemid;
+        my $biblionumber;
+        my $branchcode;
 
-        # checkout the item
-        my ( $error, $messages ) = $self->ils->request( $userid, $itemid );
-        my $vars;
-        my $output;
-        my $vars->{'barcode'} = $itemid;
-        $vars->{'messagetype'} = 'RequestItemResponse';
-        if ($error) {
-            $vars->{'processingerror'}        = 1;
-            $vars->{'processingerrortype'}    = $messages;
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+        if ( $self->{ncip_version} == 1 ) {
+            ($userid) = $xpc->findnodes( '//UserIdentifierValue', $root );
+            $userid = $userid->textContent() if $userid;
+
+            ($itemid) = $xpc->findnodes( '//ItemIdentifierValue', $root );
+            $itemid = $itemid->textContent() if $itemid;
+
+            ($biblionumber) = $xpc->findnodes( '//BibliographicRecordIdentifier', $root );
+            $biblionumber = $biblionumber->textContent() if $biblionumber;
+        } else {
+            ($userid) = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
+            $userid = $userid->textContent() if $userid;
+
+            ($itemid) = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
+            $itemid = $itemid->textContent() if $itemid;
+
+            ($biblionumber) = $xpc->findnodes( '//ns:BibliographicRecordIdentifier', $root );
+            $biblionumber = $biblionumber->textContent() if $biblionumber;
+        }
+
+        my $type = 'SYSNUMBER';
+
+        my ( $from, $to ) = $self->get_agencies($xmldoc);
+
+        $branchcode = $to->[0]->textContent() if $to;
+
+        my $data =
+          $self->ils->request( $userid, $itemid, $biblionumber, $type,
+            $branchcode );
+
+        if ( $data->{success} ) {
+            my $elements = $self->get_user_elements($xmldoc);
+            return $self->render_output(
+                'response.tt',
+                {
+                    message_type => 'RequestItemResponse',
+                    from_agency  => $to,
+                    to_agency    => $from,
+                    barcode      => $itemid,
+                    request_id   => $data->{request_id},
+                    elements     => $elements,
+                }
+            );
         }
         else {
-            my $elements = $self->get_user_elements($xmldoc);
-            $vars->{'elements'} = $elements;
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'RequestItemResponse',
+                    problems     => $data->{problems},
+                }
 
-            $output = $self->render_output( 'response.tt', $vars );
+            );
         }
-        return $output;
     }
 }
 

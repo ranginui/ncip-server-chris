@@ -1,3 +1,5 @@
-[% INCLUDE 'includes/header.inc' %]
-
+[%- SET header = 'v' _ ncip_version _ '/includes/header.inc' -%]
+[%- SET footer = 'v' _ ncip_version _ '/includes/footer.inc' -%]
+[%- INCLUDE $header -%]
 [% content %]
+[%- INCLUDE $footer -%]

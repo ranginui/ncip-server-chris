@@ -24,29 +24,34 @@ sub handle {
     my $xmldoc = shift;
     if ($xmldoc) {
         my $root = $xmldoc->documentElement();
-        my $itemid =
-          $root->findnodes('RenewItem/UniqueItemId/ItemIdentifierValue');
-        my @elements = $root->findnodes('RenewItem/ItemElementType/Value');
+        my $xpc  = $self->xpc();
+        my $userid   = $xpc->findnodes( '//ns:UserIdentifierValue', $root );
+        my $itemid   = $xpc->findnodes( '//ns:ItemIdentifierValue', $root );
 
-        # checkin the item
-        my $renewed = $self->ils->renew( $itemid );
-        my $output;
-        my $vars;
-        $vars->{'messagetype'} = 'RenewItemResponse';
-        $vars->{'barcode'} = $itemid;
-        if ( !$renewed->{success} ) {
-            $vars->{'processingerror'} = 1;
-            $vars->{'processingerrortype'} = $renewed->{'messages'};
-            $vars->{'processingerrorelement'} = 'UniqueItemIdentifier';
-            $output = $self->render_output( 'problem.tt', $vars );
+        my $data = $self->ils->renew( $itemid, $userid );
+
+        if ( $data->{success} ) {
+            my @elements = $root->findnodes('RenewItem/ItemElementType/Value');
+            return $self->render_output(
+                'response.tt',
+                {
+                    message_type => 'RenewItemResponse',
+                    barcode      => $itemid,
+                    userid       => $userid,
+                    elements     => \@elements,
+                    data         => $data,
+                }
+            );
         }
         else {
-
-            $vars->{'elements'} = \@elements;
-            $vars->{'renewed'}  = $renewed;
-            $output = $self->render_output( 'response.tt', $vars );
+            return $self->render_output(
+                'problem.tt',
+                {
+                    message_type => 'RenewItemResponse',
+                    problems     => $data->{problems},
+                }
+            );
         }
-        return $output;
     }
 }
 
